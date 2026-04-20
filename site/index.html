@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AgentHub — Launch, manage, and share AI coding sessions</title>
+<meta name="description" content="A cross-platform desktop app, CLI, and TUI for running Claude Code, Codex, Gemini CLI, and OpenCode in persistent terminal sessions — sharable over Tailscale." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="site.css" />
+<style>
+/* ---- Landing-specific styles ---- */
+
+/* HERO */
+.hero {
+  position: relative;
+  padding: 96px 0 48px;
+  overflow: hidden;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1.1fr;
+  gap: 72px;
+  align-items: center;
+}
+.hero h1 {
+  margin-top: 22px;
+  margin-bottom: 24px;
+}
+.hero h1 .accent { color: var(--accent); }
+.hero h1 .strike {
+  background: linear-gradient(90deg, var(--accent), #bb9af7 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero p.lede {
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--fg-dim);
+  max-width: 56ch;
+  margin-bottom: 32px;
+}
+.hero-cta {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  align-items: center;
+}
+.hero-meta {
+  margin-top: 32px;
+  display: flex; gap: 22px; align-items: center; flex-wrap: wrap;
+  color: var(--fg-faint); font-size: 13px;
+}
+.hero-meta .os {
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.hero-meta .os svg { width: 14px; height: 14px; opacity: 0.8; }
+
+/* Terminal mockup */
+.term-wrap { position: relative; }
+.term {
+  background: #0a0d14;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+  position: relative;
+}
+.term-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  background: #0c1119;
+  border-bottom: 1px solid var(--line);
+}
+.term-bar .dots { display: flex; gap: 6px; }
+.term-bar .dots span {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: #3b4252;
+}
+.term-bar .dots span:nth-child(1) { background: #f7768e; }
+.term-bar .dots span:nth-child(2) { background: #e0af68; }
+.term-bar .dots span:nth-child(3) { background: #9ece6a; }
+.term-bar .title { color: var(--fg-faint); font-size: 12px; margin-left: 6px; }
+.term-bar .title .badge {
+  display: inline-block; padding: 1px 7px; border-radius: 4px;
+  background: var(--bg-3); color: var(--fg-dim); margin-right: 8px;
+  font-size: 11px;
+}
+
+.term-tabs {
+  display: flex; align-items: center;
+  padding: 0 10px;
+  background: #0a0e16;
+  border-bottom: 1px solid var(--line);
+  height: 36px;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--fg-faint);
+}
+.term-tabs .tab {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 0 12px; height: 28px;
+  border-radius: 6px 6px 0 0;
+  color: var(--fg-faint);
+  border: 1px solid transparent;
+  border-bottom: none;
+  margin-bottom: -1px;
+}
+.term-tabs .tab.active {
+  color: var(--fg);
+  background: #0a0d14;
+  border-color: var(--line);
+}
+.term-tabs .tab .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+.term-tabs .plus {
+  margin-left: auto;
+  color: var(--fg-faint);
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.term-body {
+  padding: 18px 20px;
+  min-height: 380px;
+  color: #c0caf5;
+  overflow: hidden;
+  position: relative;
+}
+.term-body .line { white-space: pre; }
+.term-body .prompt { color: var(--accent); }
+.term-body .path { color: #7aa2f7; }
+.term-body .muted { color: #565f89; }
+.term-body .key { color: #bb9af7; }
+.term-body .ok { color: #9ece6a; }
+.term-body .warn { color: #e0af68; }
+.term-body .err { color: #f7768e; }
+.term-body .str { color: #9ece6a; }
+.term-body .sep { color: #3b4261; }
+.term-body .pink { color: #f7768e; }
+.term-body .white { color: #e6ecf5; }
+.term-body .gray { color: #737aa2; }
+.term-body .border { color: #414868; }
+.term-body .cursor {
+  display: inline-block;
+  width: 8px; height: 14px;
+  background: var(--accent);
+  vertical-align: -2px;
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.term-statusbar {
+  border-top: 1px solid var(--line);
+  background: #0a0d14;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 14px;
+  font-size: 11.5px;
+  color: var(--fg-dim);
+}
+.term-statusbar .left, .term-statusbar .right { display: flex; gap: 14px; align-items: center; }
+.term-statusbar .pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.term-statusbar .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+
+/* floating QR card next to terminal */
+.qr-card {
+  position: absolute;
+  right: -16px; bottom: -16px;
+  width: 186px;
+  padding: 14px;
+  background: var(--bg-1);
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  font-size: 12px;
+  color: var(--fg-dim);
+}
+.qr-card .qr {
+  width: 100%; aspect-ratio: 1/1;
+  background:
+    conic-gradient(from 0deg, transparent 0 0) padding-box,
+    repeating-linear-gradient(45deg, var(--fg) 0 2px, transparent 2px 4px) padding-box;
+  mask-image: var(--qr-mask);
+  border-radius: 6px;
+  margin-bottom: 10px;
+  background: #0a0d14;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.qr-card .qr svg { width: 90%; height: 90%; }
+.qr-card .url { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg); word-break: break-all; line-height: 1.3; }
+.qr-card .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-faint); margin-bottom: 6px; }
+
+/* Agents strip */
+.agents {
+  padding: 56px 0 0;
+}
+.agents-label {
+  text-align: center;
+  font-family: var(--font-mono); font-size: 11.5px;
+  color: var(--fg-faint); letter-spacing: 0.14em; text-transform: uppercase;
+  margin-bottom: 28px;
+}
+.agents-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.agent-chip {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
+  transition: all .2s ease;
+}
+.agent-chip:hover { border-color: var(--line-2); transform: translateY(-2px); }
+.agent-chip .glyph {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: 14px;
+  color: #0b0e14;
+  flex-shrink: 0;
+}
+.agent-chip .name { font-weight: 500; font-size: 15px; }
+.agent-chip .cmd { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-faint); margin-top: 2px; }
+
+/* Features — 3 column rich section */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.features-grid .card { padding: 28px 28px 30px; }
+.features-grid .card h3 { font-size: 17px; margin-bottom: 10px; }
+.features-grid .card p { font-size: 14.5px; }
+
+/* Big feature rows */
+.big-feature {
+  display: grid; grid-template-columns: 1fr 1.15fr;
+  gap: 64px; align-items: center;
+  padding: 40px 0;
+}
+.big-feature.reverse { grid-template-columns: 1.15fr 1fr; }
+.big-feature.reverse .bf-visual { order: -1; }
+.big-feature h2 { margin-bottom: 16px; }
+.big-feature .lede { color: var(--fg-dim); margin-bottom: 24px; font-size: 16.5px; line-height: 1.6; }
+.bf-list { display: grid; gap: 14px; list-style: none; padding: 0; margin: 0; }
+.bf-list li { display: flex; gap: 12px; font-size: 15px; color: var(--fg); line-height: 1.5; }
+.bf-list li svg { flex-shrink: 0; margin-top: 2px; color: var(--accent); width: 18px; height: 18px; }
+.bf-list li strong { font-weight: 500; }
+.bf-list li span { color: var(--fg-dim); }
+
+/* 3 modes visual */
+.modes {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-top: 48px;
+}
+.mode-card {
+  padding: 26px; border: 1px solid var(--line); border-radius: 14px;
+  background: linear-gradient(180deg, var(--bg-1), var(--bg));
+  position: relative; overflow: hidden;
+}
+.mode-card .label {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--fg-faint); letter-spacing: 0.1em;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.mode-card h3 { margin-bottom: 10px; font-size: 20px; font-weight: 600; }
+.mode-card p { color: var(--fg-dim); font-size: 14px; margin-bottom: 18px; }
+.mode-viz {
+  height: 180px; border-radius: 10px; border: 1px solid var(--line);
+  background: #0a0d14;
+  overflow: hidden; position: relative;
+  font-family: var(--font-mono); font-size: 10px; line-height: 1.5;
+  color: #a3afc2; padding: 12px;
+}
+
+/* Mini mocks */
+.mini-tui {
+  display: grid; grid-template-columns: 90px 1fr; gap: 8px;
+  height: 100%; font-size: 10px;
+}
+.mini-tui .sb { border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; }
+.mini-tui .sb-item { color: var(--fg-faint); padding: 2px 4px; border-radius: 3px; }
+.mini-tui .sb-item.active { background: var(--accent-soft); color: var(--accent); }
+.mini-tui .main { border: 1px solid var(--line); border-radius: 4px; padding: 6px; display: grid; gap: 3px; align-content: start; }
+.mini-tui .row { display: flex; align-items: center; gap: 6px; }
+.mini-tui .badge {
+  display: inline-block; padding: 0 4px; border-radius: 3px;
+  font-size: 9px; font-weight: 600; color: #0b0e14;
+}
+
+.mini-gui { display: grid; grid-template-columns: 56px 1fr; gap: 6px; height: 100%; }
+.mini-gui .side { background: var(--bg-2); border-radius: 4px; padding: 6px 4px; display: grid; gap: 6px; }
+.mini-gui .side-ic { width: 14px; height: 14px; background: var(--bg-3); border-radius: 3px; margin: 0 auto; }
+.mini-gui .side-ic.on { background: var(--accent); }
+.mini-gui .view { background: var(--bg-1); border-radius: 4px; padding: 8px; }
+.mini-gui .tab-row { display: flex; gap: 4px; margin-bottom: 6px; font-size: 9px; }
+.mini-gui .tab-chip { padding: 2px 6px; background: var(--bg-2); border-radius: 4px; color: var(--fg-faint); }
+.mini-gui .tab-chip.on { background: var(--bg-3); color: var(--fg); }
+.mini-gui .term-mini { font-family: var(--font-mono); font-size: 9px; color: #c0caf5; line-height: 1.4; }
+
+.mini-cli { padding: 8px; font-size: 10px; line-height: 1.6; }
+.mini-cli .prompt { color: var(--accent); }
+.mini-cli .muted { color: var(--fg-faint); }
+.mini-cli .gh { color: var(--accent); }
+
+/* Architecture diagram */
+.arch-stage {
+  background: linear-gradient(180deg, var(--bg-1), var(--bg));
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 40px 32px;
+  position: relative;
+}
+.arch-grid {
+  display: grid; gap: 26px;
+}
+.arch-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.arch-box {
+  padding: 18px;
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  background: var(--bg-2);
+  position: relative;
+}
+.arch-box .lbl {
+  font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--fg-faint); letter-spacing: 0.12em;
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.arch-box h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.arch-box p { font-size: 12.5px; color: var(--fg-dim); font-family: var(--font-mono); }
+.arch-daemon {
+  background: linear-gradient(180deg, rgba(76,139,255,0.06), rgba(76,139,255,0.02));
+  border: 1px solid var(--accent-edge);
+  border-radius: 14px;
+  padding: 24px;
+}
+.arch-daemon .lbl { color: var(--accent); }
+.arch-daemon-inner {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px;
+}
+.arch-chip {
+  padding: 12px; font-size: 12px;
+  border: 1px solid var(--line-2); border-radius: 8px;
+  background: var(--bg-1);
+}
+.arch-chip .n { font-weight: 500; margin-bottom: 2px; font-family: var(--font-sans); }
+.arch-chip .d { color: var(--fg-faint); font-size: 11px; font-family: var(--font-mono); }
+.arch-pipe {
+  text-align: center; font-family: var(--font-mono); font-size: 11px;
+  color: var(--fg-faint);
+  padding: 6px 0;
+}
+.arch-pipe::before, .arch-pipe::after {
+  content: ""; display: inline-block; vertical-align: middle;
+  width: 30%; height: 1px; background: var(--line);
+  margin: 0 12px;
+}
+
+/* Install section */
+.install {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.install-card {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--bg-1), var(--bg));
+}
+.install-card .os-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 18px; font-weight: 500;
+}
+.install-card .os-head svg { width: 20px; height: 20px; opacity: 0.9; }
+.install-card .os-head .note {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--fg-faint); margin-left: auto;
+}
+.install-code {
+  background: #0a0d14;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg);
+  white-space: pre;
+  overflow: auto;
+  position: relative;
+  line-height: 1.65;
+}
+.install-code .cmt { color: var(--fg-faint); }
+.install-code .cmd { color: var(--accent-2); }
+.install-code .copy {
+  position: absolute; top: 8px; right: 8px;
+  padding: 4px 8px; font-size: 11px;
+  background: var(--bg-2); border: 1px solid var(--line);
+  border-radius: 6px; color: var(--fg-dim);
+  cursor: pointer; font-family: inherit;
+  transition: all .15s ease;
+}
+.install-code .copy:hover { color: var(--fg); border-color: var(--line-2); }
+.install-code .copy.copied { color: var(--ok); }
+
+/* CTA section */
+.cta-panel {
+  border: 1px solid var(--line-2);
+  border-radius: 20px;
+  padding: 56px 48px;
+  background:
+    radial-gradient(500px 280px at 80% 20%, rgba(76,139,255,0.15), transparent 70%),
+    radial-gradient(420px 240px at 10% 100%, rgba(187,154,247,0.10), transparent 70%),
+    linear-gradient(180deg, var(--bg-1), var(--bg));
+  text-align: center;
+}
+.cta-panel h2 { margin-bottom: 14px; }
+.cta-panel p { color: var(--fg-dim); margin-bottom: 30px; max-width: 56ch; margin-left: auto; margin-right: auto; font-size: 17px; }
+.cta-panel .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* Tweaks panel */
+.tweaks-panel {
+  position: fixed; right: 20px; bottom: 20px;
+  width: 260px;
+  background: var(--bg-1);
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  padding: 16px;
+  z-index: 100;
+  display: none;
+  font-size: 13px;
+}
+.tweaks-panel.open { display: block; }
+.tweaks-panel h4 {
+  margin: 0 0 12px;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--fg-faint); font-weight: 500;
+}
+.tweaks-panel .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; }
+.tweaks-panel .row + .row { border-top: 1px solid var(--line); }
+.tweaks-panel .swatches { display: flex; gap: 6px; }
+.tweaks-panel .sw {
+  width: 22px; height: 22px; border-radius: 6px;
+  cursor: pointer; border: 2px solid transparent;
+  transition: all .15s ease;
+}
+.tweaks-panel .sw.active { border-color: var(--fg); transform: scale(1.1); }
+.tweaks-panel label { color: var(--fg-dim); }
+.tweaks-panel select, .tweaks-panel button.toggle {
+  background: var(--bg-2); border: 1px solid var(--line);
+  color: var(--fg); border-radius: 6px;
+  padding: 4px 8px; font-size: 12px; font-family: inherit;
+  cursor: pointer;
+}
+
+/* Screenshot treatment — real product shots */
+.shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  background: #0a0d14;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.04) inset,
+    0 20px 50px -20px rgba(0,0,0,0.7),
+    0 8px 20px -10px rgba(0,0,0,0.5);
+}
+.shot-frame {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background:
+    radial-gradient(600px 300px at 70% 0%, rgba(76,139,255,0.10), transparent 70%),
+    linear-gradient(180deg, var(--bg-1), var(--bg));
+  padding: 14px;
+  position: relative;
+}
+.shot-frame.compact { padding: 10px; border-radius: 12px; }
+
+/* Gallery — tabbed screenshot switcher */
+.gallery {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--bg-1), var(--bg));
+  overflow: hidden;
+}
+.gallery-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(10, 13, 20, 0.5);
+}
+.gallery-tab {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--fg-dim);
+  font: 500 13px/1 var(--font-sans);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all .15s ease;
+  white-space: nowrap;
+}
+.gallery-tab:hover { color: var(--fg); background: var(--bg-2); }
+.gallery-tab.active {
+  color: var(--fg);
+  background: var(--bg-2);
+  border-color: var(--line-2);
+  box-shadow: 0 0 0 1px var(--line) inset;
+}
+.gallery-tab .gdot {
+  width: 8px; height: 8px; border-radius: 50%;
+  display: inline-block;
+  background: var(--fg-faint);
+  box-shadow: 0 0 8px currentColor;
+}
+.gallery-tab .gkey {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--fg-faint);
+  margin-left: 2px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.04);
+}
+.gallery-tab.active .gkey { background: rgba(255,255,255,0.08); color: var(--fg-dim); }
+.gallery-stage {
+  position: relative;
+  padding: 20px 20px 24px;
+  background:
+    radial-gradient(700px 340px at 50% 0%, rgba(76,139,255,0.08), transparent 70%);
+}
+.gallery-stage .shot { display: none; }
+.gallery-stage .shot.active { display: block; }
+.gallery-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 0 4px;
+  flex-wrap: wrap;
+}
+.gallery-caption .gc-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+.gallery-caption .gc-desc {
+  color: var(--fg-dim);
+  font-size: 13.5px;
+  flex: 1;
+  min-width: 0;
+}
+.gallery-caption .gc-meta {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--fg-faint);
+  letter-spacing: 0.04em;
+}
+.gallery-cap {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.gallery-cap.active { display: flex; }
+
+/* Responsive */
+@media (max-width: 960px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+  .agents-row, .install, .features-grid, .modes, .arch-row, .arch-daemon-inner { grid-template-columns: 1fr 1fr; }
+  .big-feature { grid-template-columns: 1fr; gap: 32px; }
+  .big-feature.reverse .bf-visual { order: 0; }
+  .qr-card { display: none; }
+}
+@media (max-width: 640px) {
+  .agents-row, .install, .features-grid, .modes, .arch-row, .arch-daemon-inner { grid-template-columns: 1fr; }
+  .cta-panel { padding: 40px 24px; }
+}
+</style>
+</head>
+<body data-page="home">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container-wide">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span> v3.0 — Apr 2026</span>
+        <h1>
+          One hub for every<br/>
+          <span class="strike">AI coding session.</span>
+        </h1>
+        <p class="lede">
+          Run <strong>Claude Code</strong>, <strong>Codex</strong>, <strong>Gemini CLI</strong>, and <strong>OpenCode</strong> in persistent terminal sessions — controllable from a desktop app, a CLI, or a full-screen TUI. Sessions outlive your GUI, survive restarts, and can be shared over Tailscale with browser-trusted TLS.
+        </p>
+        <div class="hero-cta">
+          <a href="download.html" class="btn btn-primary btn-lg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download for macOS
+          </a>
+          <a href="docs.html#getting-started" class="btn btn-ghost btn-lg">Read the docs</a>
+        </div>
+        <div class="hero-meta">
+          <span class="os"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg> macOS</span>
+          <span class="os"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 1.56c-.14 0-.28.04-.4.12-.5.3-.74.98-.65 1.76.09.78.5 1.38 1 1.5.36.08.7-.04.93-.3.24-.27.34-.67.27-1.12-.14-.96-.65-1.73-1.15-1.96zm-1.1 2.62c-.35 0-.66.14-.88.39-.34.4-.5 1-.45 1.66.05.62.3 1.14.67 1.36.24.15.52.18.77.08.5-.2.84-.78.84-1.56 0-.5-.15-1.08-.45-1.44-.2-.33-.43-.5-.5-.49zM12 2.5c4.97 0 9 5.22 9 11.5 0 1.88-.82 3.64-1.85 4.8.25.6.43 1.24.5 1.95.05.44-.1.87-.37 1.1-.34.27-.82.4-1.32.27-1.17-.3-1.84-1.26-2.28-2.1-.53.13-1.08.2-1.68.2a6.6 6.6 0 0 1-1.66-.2c-.45.85-1.12 1.82-2.3 2.1-.5.13-.97 0-1.31-.27-.28-.23-.43-.66-.38-1.1.08-.7.26-1.34.5-1.95C3.83 17.64 3 15.88 3 14 3 7.72 7.03 2.5 12 2.5z"/></svg> Linux</span>
+          <span class="os"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.3 4.4V11.3H3V5.5zM11.2 4.2L21 3V11.3H11.2V4.2zM3 12.2H10.3V19.1L3 18V12.2zM11.2 12.2H21V20.9L11.2 19.6V12.2z"/></svg> Windows</span>
+          <span>·</span>
+          <span>Free &amp; open source</span>
+          <span class="mono-caption">MIT</span>
+        </div>
+      </div>
+
+      <!-- TERMINAL -->
+      <div class="term-wrap">
+        <div class="term">
+          <div class="term-bar">
+            <span class="dots"><span></span><span></span><span></span></span>
+            <span class="title"><span class="badge">AgentHub</span>~/projects/payments — claude code</span>
+          </div>
+          <div class="term-tabs">
+            <span class="tab active"><span class="dot" style="color:var(--claude); background:var(--claude);"></span> payments · claude</span>
+            <span class="tab"><span class="dot" style="color:var(--codex); background:var(--codex);"></span> api · codex</span>
+            <span class="tab"><span class="dot" style="color:var(--gemini); background:var(--gemini);"></span> docs · gemini</span>
+            <span class="plus">+</span>
+          </div>
+          <div class="term-body" id="term-body">
+            <!-- JS will type here -->
+          </div>
+          <div class="term-statusbar">
+            <div class="left">
+              <span class="pill"><span class="dot"></span> running</span>
+              <span>payments</span>
+              <span class="mono-caption">claude · scottkw-mbp</span>
+            </div>
+            <div class="right">
+              <span class="mono-caption">2 viewers</span>
+              <span class="mono-caption">ctrl-\ detach</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating QR Card -->
+        <div class="qr-card" aria-hidden="true">
+          <div class="lbl">Share over Tailscale</div>
+          <div class="qr">
+            <svg viewBox="0 0 29 29" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+              <!-- Fake but convincing QR pattern -->
+              <rect width="29" height="29" fill="transparent"/>
+              <g fill="#e6ecf5">
+                <!-- finder top-left -->
+                <rect x="0" y="0" width="7" height="1"/><rect x="0" y="6" width="7" height="1"/>
+                <rect x="0" y="0" width="1" height="7"/><rect x="6" y="0" width="1" height="7"/>
+                <rect x="2" y="2" width="3" height="3"/>
+                <!-- finder top-right -->
+                <rect x="22" y="0" width="7" height="1"/><rect x="22" y="6" width="7" height="1"/>
+                <rect x="22" y="0" width="1" height="7"/><rect x="28" y="0" width="1" height="7"/>
+                <rect x="24" y="2" width="3" height="3"/>
+                <!-- finder bottom-left -->
+                <rect x="0" y="22" width="7" height="1"/><rect x="0" y="28" width="7" height="1"/>
+                <rect x="0" y="22" width="1" height="7"/><rect x="6" y="22" width="1" height="7"/>
+                <rect x="2" y="24" width="3" height="3"/>
+                <!-- random data cells -->
+                <rect x="8" y="1" width="1" height="1"/><rect x="10" y="1" width="1" height="1"/>
+                <rect x="13" y="1" width="1" height="1"/><rect x="15" y="1" width="1" height="1"/>
+                <rect x="17" y="1" width="1" height="1"/><rect x="20" y="1" width="1" height="1"/>
+                <rect x="9" y="3" width="1" height="1"/><rect x="11" y="3" width="2" height="1"/>
+                <rect x="14" y="3" width="1" height="1"/><rect x="16" y="3" width="1" height="1"/>
+                <rect x="19" y="3" width="1" height="1"/>
+                <rect x="8" y="5" width="1" height="1"/><rect x="10" y="5" width="1" height="1"/>
+                <rect x="13" y="5" width="1" height="1"/><rect x="15" y="5" width="1" height="1"/>
+                <rect x="18" y="5" width="2" height="1"/>
+                <rect x="9" y="7" width="1" height="1"/><rect x="12" y="7" width="2" height="1"/>
+                <rect x="16" y="7" width="1" height="1"/><rect x="19" y="7" width="1" height="1"/>
+                <rect x="0" y="8" width="1" height="1"/><rect x="3" y="8" width="1" height="1"/>
+                <rect x="5" y="8" width="2" height="1"/><rect x="10" y="8" width="1" height="1"/>
+                <rect x="12" y="8" width="1" height="1"/><rect x="15" y="8" width="2" height="1"/>
+                <rect x="19" y="8" width="1" height="1"/><rect x="22" y="8" width="1" height="1"/>
+                <rect x="24" y="8" width="1" height="1"/><rect x="27" y="8" width="1" height="1"/>
+                <rect x="1" y="10" width="1" height="1"/><rect x="4" y="10" width="1" height="1"/>
+                <rect x="7" y="10" width="1" height="1"/><rect x="9" y="10" width="2" height="1"/>
+                <rect x="13" y="10" width="1" height="1"/><rect x="16" y="10" width="1" height="1"/>
+                <rect x="18" y="10" width="1" height="1"/><rect x="21" y="10" width="1" height="1"/>
+                <rect x="23" y="10" width="1" height="1"/><rect x="25" y="10" width="2" height="1"/>
+                <rect x="0" y="12" width="1" height="1"/><rect x="2" y="12" width="1" height="1"/>
+                <rect x="5" y="12" width="1" height="1"/><rect x="8" y="12" width="1" height="1"/>
+                <rect x="10" y="12" width="1" height="1"/><rect x="13" y="12" width="2" height="1"/>
+                <rect x="16" y="12" width="1" height="1"/><rect x="18" y="12" width="2" height="1"/>
+                <rect x="22" y="12" width="1" height="1"/><rect x="25" y="12" width="1" height="1"/>
+                <rect x="27" y="12" width="1" height="1"/>
+                <rect x="1" y="14" width="2" height="1"/><rect x="5" y="14" width="1" height="1"/>
+                <rect x="7" y="14" width="1" height="1"/><rect x="9" y="14" width="1" height="1"/>
+                <rect x="11" y="14" width="1" height="1"/><rect x="14" y="14" width="1" height="1"/>
+                <rect x="17" y="14" width="2" height="1"/><rect x="20" y="14" width="1" height="1"/>
+                <rect x="23" y="14" width="1" height="1"/><rect x="26" y="14" width="1" height="1"/>
+                <rect x="0" y="16" width="1" height="1"/><rect x="3" y="16" width="1" height="1"/>
+                <rect x="6" y="16" width="1" height="1"/><rect x="8" y="16" width="2" height="1"/>
+                <rect x="12" y="16" width="1" height="1"/><rect x="14" y="16" width="1" height="1"/>
+                <rect x="16" y="16" width="1" height="1"/><rect x="19" y="16" width="1" height="1"/>
+                <rect x="22" y="16" width="2" height="1"/><rect x="25" y="16" width="1" height="1"/>
+                <rect x="27" y="16" width="1" height="1"/>
+                <rect x="1" y="18" width="1" height="1"/><rect x="4" y="18" width="2" height="1"/>
+                <rect x="7" y="18" width="1" height="1"/><rect x="10" y="18" width="1" height="1"/>
+                <rect x="13" y="18" width="1" height="1"/><rect x="15" y="18" width="2" height="1"/>
+                <rect x="18" y="18" width="1" height="1"/><rect x="21" y="18" width="1" height="1"/>
+                <rect x="24" y="18" width="1" height="1"/><rect x="26" y="18" width="2" height="1"/>
+                <rect x="0" y="20" width="1" height="1"/><rect x="2" y="20" width="2" height="1"/>
+                <rect x="6" y="20" width="1" height="1"/><rect x="8" y="20" width="1" height="1"/>
+                <rect x="11" y="20" width="1" height="1"/><rect x="13" y="20" width="1" height="1"/>
+                <rect x="16" y="20" width="2" height="1"/><rect x="20" y="20" width="1" height="1"/>
+                <rect x="22" y="20" width="1" height="1"/><rect x="25" y="20" width="1" height="1"/>
+                <rect x="27" y="20" width="1" height="1"/>
+                <rect x="9" y="22" width="1" height="1"/><rect x="11" y="22" width="2" height="1"/>
+                <rect x="14" y="22" width="1" height="1"/><rect x="17" y="22" width="1" height="1"/>
+                <rect x="19" y="22" width="2" height="1"/><rect x="23" y="22" width="1" height="1"/>
+                <rect x="26" y="22" width="1" height="1"/>
+                <rect x="8" y="24" width="1" height="1"/><rect x="10" y="24" width="1" height="1"/>
+                <rect x="12" y="24" width="1" height="1"/><rect x="15" y="24" width="2" height="1"/>
+                <rect x="18" y="24" width="1" height="1"/><rect x="20" y="24" width="1" height="1"/>
+                <rect x="22" y="24" width="1" height="1"/><rect x="25" y="24" width="1" height="1"/>
+                <rect x="27" y="24" width="1" height="1"/>
+                <rect x="9" y="26" width="2" height="1"/><rect x="13" y="26" width="1" height="1"/>
+                <rect x="15" y="26" width="1" height="1"/><rect x="17" y="26" width="2" height="1"/>
+                <rect x="21" y="26" width="1" height="1"/><rect x="23" y="26" width="2" height="1"/>
+                <rect x="26" y="26" width="1" height="1"/>
+                <rect x="8" y="28" width="1" height="1"/><rect x="11" y="28" width="1" height="1"/>
+                <rect x="14" y="28" width="2" height="1"/><rect x="18" y="28" width="1" height="1"/>
+                <rect x="20" y="28" width="1" height="1"/><rect x="22" y="28" width="1" height="1"/>
+                <rect x="25" y="28" width="1" height="1"/><rect x="27" y="28" width="1" height="1"/>
+              </g>
+            </svg>
+          </div>
+          <div class="url">scottkw-mbp.tail.ts.net/s/a1b2</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent chips -->
+    <div class="agents">
+      <div class="agents-label">One app · four agents · one persistent hub</div>
+      <div class="agents-row">
+        <div class="agent-chip">
+          <span class="glyph" style="background: var(--claude);">CC</span>
+          <div><div class="name">Claude Code</div><div class="cmd">agenthub new claude-code</div></div>
+        </div>
+        <div class="agent-chip">
+          <span class="glyph" style="background: var(--codex);">CX</span>
+          <div><div class="name">Codex</div><div class="cmd">agenthub new codex</div></div>
+        </div>
+        <div class="agent-chip">
+          <span class="glyph" style="background: var(--gemini);">GM</span>
+          <div><div class="name">Gemini CLI</div><div class="cmd">agenthub new gemini</div></div>
+        </div>
+        <div class="agent-chip">
+          <span class="glyph" style="background: var(--opencode);">OC</span>
+          <div><div class="name">OpenCode</div><div class="cmd">agenthub new opencode</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES GRID -->
+<section class="section" id="features">
+  <div class="container-wide">
+    <div class="section-title">
+      <div>
+        <span class="eyebrow"><span class="dot"></span> Built for power users</span>
+        <h2 style="margin-top:16px;">A terminal that outlives your window.</h2>
+      </div>
+      <p>AgentHub is a single binary with a background daemon. The GUI is optional, sessions are durable, and every control surface is first-class.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 7l-4 5 4 5"/><path d="M15 7l4 5-4 5"/></svg></div>
+        <h3>Persistent daemon</h3>
+        <p>Sessions live in a standalone background process. Close the GUI, drop the SSH, unplug your laptop — agents keep running where you left them.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></div>
+        <h3>Three ways in</h3>
+        <p>Native desktop app (Wails + React + xterm.js), full CLI (<code>agenthub attach</code>), and a Bubble Tea TUI with near-GUI parity. All talk to the same daemon.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></div>
+        <h3>Share over Tailscale</h3>
+        <p>Auto-serves sessions on your tailnet with Let's Encrypt TLS. No firewall holes. Falls back to self-signed TLS + password auth on LAN when Tailscale isn't available.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="4"/><circle cx="17" cy="17" r="4"/><path d="M9 13v4M13 9h4"/></svg></div>
+        <h3>Multi-client</h3>
+        <p>Multiple viewers on the same session. Independent scrollback, <code>--readonly</code> observer mode, per-client identity, and max-wins PTY resize arbitration.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 22h8M12 18v4"/></svg></div>
+        <h3>Cross-platform</h3>
+        <p>macOS (signed &amp; notarized universal), Linux (deb + generic tar), Windows (NSIS installer). Native system tray on every platform.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></div>
+        <h3>Auto CLI detection</h3>
+        <p>Finds Claude Code, Codex, Gemini, and OpenCode across nvm, Volta, Homebrew, snap, flatpak, cargo, pipx, and platform installers — even when launched from Finder.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg></div>
+        <h3>138 terminal themes</h3>
+        <p>WCAG-audited color schemes from the xterm-theme library. Live-switch and persist — including OpenCode, which honors the theme via SIGUSR2 broadcast.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
+        <h3>Status bar that stays</h3>
+        <p>Tmux-style persistent status bar during CLI attach. Shows session name, agent, hostname, elapsed time, and live viewer count without corrupting output.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l4 8 8 1-6 6 2 8-8-4-8 4 2-8-6-6 8-1z"/></svg></div>
+        <h3>It just runs</h3>
+        <p>Auto-update checker, quit-confirmation with session count, start-minimized option, and a native tray menu listing live sessions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THREE MODES -->
+<section class="section" style="padding-top:32px;">
+  <div class="container-wide">
+    <div class="section-title">
+      <div>
+        <span class="eyebrow"><span class="dot" style="background:var(--gemini); box-shadow:0 0 10px var(--gemini);"></span> GUI · CLI · TUI</span>
+        <h2 style="margin-top:16px;">Same daemon. Every surface.</h2>
+      </div>
+      <p>Whichever way you like to drive a terminal, AgentHub meets you there. All three surfaces talk to the same session engine over a local Unix socket.</p>
+    </div>
+
+    <div class="modes">
+      <div class="mode-card">
+        <div class="label">01 · Desktop</div>
+        <h3>GUI</h3>
+        <p>Wails + React shell with xterm.js tabs, collapsible sidebar, and in-app settings.</p>
+        <div class="mode-viz">
+          <img class="shot" src="images/screenshot-gui-claude-agent.png" alt="AgentHub desktop app showing a Claude Code session" loading="lazy" />
+        </div>
+      </div>
+
+      <div class="mode-card">
+        <div class="label">02 · Terminal</div>
+        <h3>CLI</h3>
+        <p>Full PTY attach with tmux-style status bar. JSON output. Ctrl-\ detach.</p>
+        <div class="mode-viz">
+          <div class="mini-cli">
+            <div><span class="prompt">$</span> agenthub list</div>
+            <div class="muted">ID       AGENT   HOST        VIEWERS</div>
+            <div>a1b2c3   <span style="color:var(--claude)">claude</span>  mbp         <span class="gh">2</span></div>
+            <div>d4e5f6   <span style="color:var(--codex)">codex</span>   mbp         <span class="gh">1</span></div>
+            <div>g7h8i9   <span style="color:var(--gemini)">gemini</span>  laptop.ts   <span class="gh">0</span></div>
+            <div><span class="prompt">$</span> agenthub attach a1b2c3<span style="color:var(--accent); background:var(--accent); display:inline-block; width:6px; height:10px; vertical-align:-1px;"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mode-card">
+        <div class="label">03 · Full-screen</div>
+        <h3>TUI</h3>
+        <p>Bubble Tea v2 with sidebar navigation, modals, QR overlay, and remote peer sessions.</p>
+        <div class="mode-viz">
+          <div class="mini-tui">
+            <div class="sb">
+              <div class="sb-item">Home</div>
+              <div class="sb-item active">▸ Sessions</div>
+              <div class="sb-item">Remote</div>
+              <div class="sb-item">Settings</div>
+            </div>
+            <div class="main">
+              <div class="row"><span class="badge" style="background:var(--claude)">CC</span><span style="color:var(--fg)">payments</span><span style="color:var(--ok); margin-left:auto;">●</span></div>
+              <div class="row"><span class="badge" style="background:var(--codex)">CX</span><span style="color:var(--fg)">api</span><span style="color:var(--ok); margin-left:auto;">●</span></div>
+              <div class="row"><span class="badge" style="background:var(--gemini)">GM</span><span style="color:var(--fg-faint)">docs</span><span style="color:var(--warn); margin-left:auto;">●</span></div>
+              <div style="color:var(--fg-faint); margin-top:4px; border-top:1px solid var(--line); padding-top:4px;">— laptop.ts.net —</div>
+              <div class="row"><span class="badge" style="background:var(--opencode)">OC</span><span style="color:var(--fg-faint)">infra</span><span style="color:var(--fg-faint); margin-left:auto;">●</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BIG FEATURE: REMOTE -->
+<section class="section" style="padding-top:32px;">
+  <div class="container-wide">
+    <div class="big-feature">
+      <div>
+        <span class="eyebrow"><span class="dot" style="background:var(--opencode); box-shadow:0 0 10px var(--opencode);"></span> Remote &amp; shared</span>
+        <h2 style="margin-top:16px;">Share a session like a URL.</h2>
+        <p class="lede">Every session auto-serves over HTTPS on your tailnet with browser-trusted certificates — no port forwarding, no firewall rules. A QR code is generated for every session, so your phone joins with a scan.</p>
+        <ul class="bf-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Tailscale peer discovery</strong> <span>— AgentHub instances on your tailnet appear in the Remote tab.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Zero-config TLS</strong> <span>— Let's Encrypt via Tailscale's <code>GetCertificate</code>, with a self-signed + password-auth fallback.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>CLI attach across machines</strong> <span>— <code>agenthub attach hostname:id</code> proxies over WSS.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Read-only observers</strong> <span>— drop <code>--readonly</code> and watch without sending keystrokes.</span></div></li>
+        </ul>
+      </div>
+      <div class="bf-visual">
+        <div class="shot-frame">
+          <img class="shot" src="images/screenshot-gui-remote-sessions.png" alt="AgentHub Remote tab showing sessions on another Tailscale peer" loading="lazy" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BIG FEATURE: MULTI-CLIENT -->
+<section class="section" style="padding-top:0;">
+  <div class="container-wide">
+    <div class="big-feature reverse">
+      <div>
+        <span class="eyebrow"><span class="dot" style="background:var(--gemini); box-shadow:0 0 10px var(--gemini);"></span> Multi-client relay</span>
+        <h2 style="margin-top:16px;">Many viewers. One PTY.</h2>
+        <p class="lede">The relay hub fans one session's output to any number of connected clients — desktop, CLI, browser. Each client has its own scrollback, own font size, own identity. Resize arbitrates to the largest dimensions.</p>
+        <ul class="bf-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Binary framing protocol</strong> <span>over WebSocket with per-subscriber metadata.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Client identity</strong> <span>— tag viewers: <code>agenthub attach --client=macbook</code>.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Scrollback replay</strong> <span>— late joiners get the full history, not a blank screen.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Max-wins resize</strong> <span>— PTY dimensions stabilize to the largest client; no thrashing.</span></div></li>
+        </ul>
+      </div>
+      <div class="bf-visual">
+        <div class="term" style="font-size:12px;">
+          <div class="term-bar">
+            <span class="dots"><span></span><span></span><span></span></span>
+            <span class="title"><span class="badge">relay</span>session a1b2 · 3 clients</span>
+          </div>
+          <div class="term-body" style="min-height:300px;">
+<div class="line"><span class="muted">┌────────────────────────────────────────────┐</span></div>
+<div class="line"><span class="muted">│</span>  <span class="white">PTY · Claude Code · payments</span>                  <span class="muted">│</span></div>
+<div class="line"><span class="muted">│</span>  <span class="ok">●</span> running  <span class="key">80×24</span>  <span class="muted">buf: 10k lines</span>          <span class="muted">│</span></div>
+<div class="line"><span class="muted">└──────────────────────┬─────────────────────┘</span></div>
+<div class="line">                       <span class="muted">│</span></div>
+<div class="line">         <span class="muted">┌─────────────┼─────────────┐</span></div>
+<div class="line">         <span class="muted">▼</span>             <span class="muted">▼</span>             <span class="muted">▼</span></div>
+<div class="line">  <span class="prompt">▮</span> <span class="white">macbook</span>      <span class="prompt">▮</span> <span class="white">iphone</span>       <span class="prompt">▮</span> <span class="white">pi-tv</span></div>
+<div class="line">    <span class="muted">gui, 120×38</span>    <span class="muted">web, 80×24</span>    <span class="muted">cli, 80×24</span></div>
+<div class="line">    <span class="ok">writer</span>         <span class="warn">readonly</span>       <span class="ok">writer</span></div>
+<div class="line"> </div>
+<div class="line"><span class="muted">resize → max(120, 80, 80) × max(38, 24, 24) = <span class="key">120×38</span></span></div>
+<div class="line"><span class="muted">fan-out rate: <span class="ok">28 MB/s</span>  ·  latency: <span class="ok">3ms</span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section class="section" id="architecture">
+  <div class="container-wide">
+    <div class="section-title">
+      <div>
+        <span class="eyebrow"><span class="dot" style="background:var(--codex); box-shadow:0 0 10px var(--codex);"></span> Under the hood</span>
+        <h2 style="margin-top:16px;">One daemon. Everything else is a client.</h2>
+      </div>
+      <p>The daemon owns the PTYs, the relay hub, and the web server. Every UI — GUI, CLI, TUI, browser — is a thin client talking over Unix socket or WSS.</p>
+    </div>
+
+    <div class="arch-stage">
+      <div class="arch-grid">
+        <!-- Clients -->
+        <div>
+          <div class="mono-caption" style="margin-bottom:10px;">// clients</div>
+          <div class="arch-row">
+            <div class="arch-box">
+              <div class="lbl">Desktop</div>
+              <h4>GUI</h4>
+              <p>Wails · React · xterm.js</p>
+            </div>
+            <div class="arch-box">
+              <div class="lbl">Terminal</div>
+              <h4>CLI</h4>
+              <p>agenthub attach / list / new</p>
+            </div>
+            <div class="arch-box">
+              <div class="lbl">Full-screen</div>
+              <h4>TUI</h4>
+              <p>Bubble Tea v2 · Lip Gloss</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="arch-pipe">DaemonClient · Unix socket / Named pipe</div>
+
+        <!-- Daemon -->
+        <div class="arch-daemon">
+          <div class="lbl">// daemon — background process</div>
+          <h3 style="margin-top:8px;">Session engine</h3>
+          <div class="arch-daemon-inner">
+            <div class="arch-chip"><div class="n">PTY engine</div><div class="d">go-pty</div></div>
+            <div class="arch-chip"><div class="n">Relay hub</div><div class="d">WebSocket fan-out</div></div>
+            <div class="arch-chip"><div class="n">Web server</div><div class="d">Tailscale / LAN TLS</div></div>
+            <div class="arch-chip"><div class="n">Status detector</div><div class="d">heuristics</div></div>
+            <div class="arch-chip"><div class="n">QR generator</div><div class="d">go-qrcode</div></div>
+            <div class="arch-chip"><div class="n">Tailnet peers</div><div class="d">tsnet client</div></div>
+            <div class="arch-chip"><div class="n">Updater</div><div class="d">GitHub releases</div></div>
+            <div class="arch-chip"><div class="n">Service mgr</div><div class="d">launchd/systemd/scm</div></div>
+          </div>
+        </div>
+
+        <div class="arch-pipe">HTTPS · WSS · HTTP/JSON</div>
+
+        <div>
+          <div class="mono-caption" style="margin-bottom:10px;">// browsers · phones · other tailnet peers</div>
+          <div class="arch-row">
+            <div class="arch-box">
+              <div class="lbl">Browser</div>
+              <h4>Web terminal</h4>
+              <p>dashboard · xterm.js</p>
+            </div>
+            <div class="arch-box">
+              <div class="lbl">Mobile</div>
+              <h4>QR → join</h4>
+              <p>Safari / Chrome</p>
+            </div>
+            <div class="arch-box">
+              <div class="lbl">Tailnet</div>
+              <h4>Remote peer</h4>
+              <p>agenthub on laptop.ts</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section class="section" id="gallery" style="padding-top:32px;">
+  <div class="container-wide">
+    <div class="section-title">
+      <div>
+        <span class="eyebrow"><span class="dot" style="background:var(--claude); box-shadow:0 0 10px var(--claude);"></span> See it in action</span>
+        <h2 style="margin-top:16px;">Every agent. One window.</h2>
+      </div>
+      <p>Tabs for each running agent, a sidebar for sessions and remote peers, and a settings pane for terminal themes, Tailscale status, and the web server. Click a tab to take a look.</p>
+    </div>
+
+    <div class="gallery" id="gallery">
+      <div class="gallery-tabs" role="tablist">
+        <button class="gallery-tab active" data-shot="claude" role="tab" aria-selected="true">
+          <span class="gdot" style="color:var(--claude); background:var(--claude);"></span>
+          Claude Code
+          <span class="gkey">1</span>
+        </button>
+        <button class="gallery-tab" data-shot="codex" role="tab" aria-selected="false">
+          <span class="gdot" style="color:var(--codex); background:var(--codex);"></span>
+          Codex
+          <span class="gkey">2</span>
+        </button>
+        <button class="gallery-tab" data-shot="gemini" role="tab" aria-selected="false">
+          <span class="gdot" style="color:var(--gemini); background:var(--gemini);"></span>
+          Gemini CLI
+          <span class="gkey">3</span>
+        </button>
+        <button class="gallery-tab" data-shot="opencode" role="tab" aria-selected="false">
+          <span class="gdot" style="color:var(--opencode); background:var(--opencode);"></span>
+          OpenCode
+          <span class="gkey">4</span>
+        </button>
+        <span style="flex:1; min-width:10px;"></span>
+        <button class="gallery-tab" data-shot="sessions" role="tab" aria-selected="false">
+          <span class="gdot" style="color:var(--accent); background:var(--accent);"></span>
+          Sessions
+          <span class="gkey">5</span>
+        </button>
+        <button class="gallery-tab" data-shot="remote" role="tab" aria-selected="false">
+          <span class="gdot" style="color:var(--accent); background:var(--accent);"></span>
+          Remote
+          <span class="gkey">6</span>
+        </button>
+        <button class="gallery-tab" data-shot="settings" role="tab" aria-selected="false">
+          <span class="gdot" style="color:var(--fg-faint); background:var(--fg-faint);"></span>
+          Settings
+          <span class="gkey">7</span>
+        </button>
+      </div>
+
+      <div class="gallery-stage">
+        <img class="shot active" data-shot="claude"   src="images/screenshot-gui-claude-agent.png"   alt="Claude Code v2.1.114 running in AgentHub — Opus 4.7 with a 1M-token context, auto mode on" loading="lazy" />
+        <img class="shot"        data-shot="codex"    src="images/screenshot-gui-codex-agent.png"    alt="OpenAI Codex running in AgentHub — gpt-5.4 high, update banner visible" loading="lazy" />
+        <img class="shot"        data-shot="gemini"   src="images/screenshot-gui-gemini-agent.png"   alt="Gemini CLI v0.38.2 running in AgentHub — signed in with Google, Gemini 3 flash preview" loading="lazy" />
+        <img class="shot"        data-shot="opencode" src="images/screenshot-gui-opencode-agent.png" alt="OpenCode 1.4.10 running in AgentHub — Claude Opus 4.6 over OpenRouter" loading="lazy" />
+        <img class="shot"        data-shot="sessions" src="images/screenshot-gui-sessions.png" alt="AgentHub Sessions pane listing four active agents with Web and Kill controls" loading="lazy" />
+        <img class="shot"        data-shot="remote"   src="images/screenshot-gui-remote-sessions.png"   alt="AgentHub Remote pane showing a web-enabled session on another Tailscale peer" loading="lazy" />
+        <img class="shot"        data-shot="settings" src="images/screenshot-gui-settings.png" alt="AgentHub Settings — behavior, terminal theme, Tailscale status, and web server" loading="lazy" />
+
+        <div class="gallery-caption">
+          <span class="gallery-cap active" data-shot="claude">
+            <span class="gc-title" style="color: var(--claude);">Claude Code</span>
+            <span class="gc-desc">Opus 4.7, 1M-token context. AgentHub detected it under <code>~/.nvm</code> and auto-wired the Warp integration notice.</span>
+            <span class="gc-meta">agenthub new claude-code</span>
+          </span>
+          <span class="gallery-cap" data-shot="codex">
+            <span class="gc-title" style="color: var(--codex);">Codex</span>
+            <span class="gc-desc">Running <code>v0.46.0</code> with an update banner, <code>gpt-5.4 high</code>. Slash commands and approval flows are fully passed through.</span>
+            <span class="gc-meta">agenthub new codex</span>
+          </span>
+          <span class="gallery-cap" data-shot="gemini">
+            <span class="gc-title" style="color: var(--gemini);">Gemini CLI</span>
+            <span class="gc-desc">Signed in with Google, Gemini Code Assist plan detected. Sandbox state and model picker visible in the status bar.</span>
+            <span class="gc-meta">agenthub new gemini</span>
+          </span>
+          <span class="gallery-cap" data-shot="opencode">
+            <span class="gc-title" style="color: var(--opencode);">OpenCode</span>
+            <span class="gc-desc">1.4.10 with Claude Opus 4.6 routed through OpenRouter. AgentHub broadcasts theme changes via SIGUSR2 so it tracks your terminal theme.</span>
+            <span class="gc-meta">agenthub new opencode</span>
+          </span>
+          <span class="gallery-cap" data-shot="sessions">
+            <span class="gc-title">Sessions</span>
+            <span class="gc-desc">Every live session across every agent, with per-row Web toggle and Kill. The status dot matches the PTY's activity state.</span>
+            <span class="gc-meta">agenthub list</span>
+          </span>
+          <span class="gallery-cap" data-shot="remote">
+            <span class="gc-title">Remote</span>
+            <span class="gc-desc">Web-enabled sessions on other AgentHub instances across your tailnet. One click opens a proxied terminal session in a new tab.</span>
+            <span class="gc-meta">agenthub remote list</span>
+          </span>
+          <span class="gallery-cap" data-shot="settings">
+            <span class="gc-title">Settings</span>
+            <span class="gc-desc">Tray behavior, auto-close rules, terminal theme (138 to choose from), Tailscale hostname, certificate transparency acknowledgement, and port.</span>
+            <span class="gc-meta">~/.config/agenthub/config.toml</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SCREENSHOTS -->
+<section class="section" id="screenshots" style="padding-top:32px;">
+  <div class="container-wide">
+    <div class="section-title">
+      <div>
+        <span class="eyebrow"><span class="dot" style="background:var(--opencode); box-shadow:0 0 10px var(--opencode);"></span> Every screen</span>
+        <h2 style="margin-top:16px;">The whole interface, one scroll.</h2>
+      </div>
+      <p>Desktop app and full-screen TUI — every pane of both surfaces, captured from a live install with personal data redacted.</p>
+    </div>
+
+    <style>
+      .shots-group + .shots-group { margin-top: 56px; }
+      .shots-heading {
+        display: flex; align-items: baseline; gap: 14px;
+        font-family: var(--font-mono); font-size: 11.5px;
+        letter-spacing: 0.14em; text-transform: uppercase;
+        color: var(--fg-faint);
+        margin-bottom: 20px;
+      }
+      .shots-heading .count { color: var(--fg-mute); font-size: 11px; }
+      .shots-heading .bar { flex: 1; height: 1px; background: var(--line); }
+      .shots-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      .shot-tile {
+        margin: 0;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: linear-gradient(180deg, var(--bg-1), var(--bg));
+        overflow: hidden;
+        transition: border-color .2s ease, transform .2s ease;
+      }
+      .shot-tile:hover { border-color: var(--line-2); transform: translateY(-2px); }
+      .shot-tile img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-bottom: 1px solid var(--line);
+        background: #0a0d14;
+      }
+      .shot-tile figcaption {
+        display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+        color: var(--fg-dim);
+      }
+      .shot-tile figcaption .tag {
+        font-family: var(--font-mono); font-size: 10.5px;
+        color: var(--fg-faint);
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(255,255,255,0.04);
+      }
+      @media (max-width: 960px) { .shots-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 640px) { .shots-grid { grid-template-columns: 1fr; } }
+    </style>
+
+    <div class="shots-group">
+      <div class="shots-heading">
+        <span>Desktop · GUI</span>
+        <span class="count">8 views</span>
+        <span class="bar"></span>
+      </div>
+      <div class="shots-grid">
+        <figure class="shot-tile">
+          <img src="images/screenshot-gui-welcome.png" alt="AgentHub desktop app — welcome screen with install commands and links" loading="lazy" />
+          <figcaption><span>Welcome</span><span class="tag">agenthub</span></figcaption>
+        </figure>
+        <figure class="shot-tile">
+          <img src="images/screenshot-gui-claude-agent.png" alt="AgentHub desktop app — Claude Code session" loading="lazy" />
+          <figcaption><span style="color:var(--claude)">Claude Code</span><span class="tag">claude-code</span></figcaption>
+        </figure>
+        <figure class="shot-tile">
+          <img src="images/screenshot-gui-codex-agent.png" alt="AgentHub desktop app — Codex session" loading="lazy" />
+          <figcaption><span style="color:var(--codex)">Codex</span><span class="tag">codex</span></figcaption>
+        </figure>
+        <figure class="shot-tile">
+          <img src="images/screenshot-gui-gemini-agent.png" alt="AgentHub desktop app — Gemini CLI session" loading="lazy" />
+          <figcaption><span style="color:var(--gemini)">Gemini CLI</span><span class="tag">gemini</span></figcaption>
+        </figure>
+        <figure class="shot-tile">
+          <img src="images/screenshot-gui-opencode-agent.png" alt="AgentHub desktop app — OpenCode session" loading="lazy" />
+          <figcaption><span style="color:var(--opencode)">OpenCode</span><span class="tag">opencode</span></figcaption>
+        </figure>
+        <figure class="shot-tile">
+          <img src="images/screenshot-gui-sessions.png" alt="AgentHub desktop app — Sessions pane listing live agents" loading="lazy" />
+          <figcaption><span>Sessions</span><span class="tag">list</span></figcaption>
+        </figure>
+        <figure class="shot-tile">
+          <img src="images/screenshot-gui-remote-sessions.png" alt="AgentHub desktop app — Remote sessions on tailnet peers" loading="lazy" />
+          <figcaption><span>Remote</span><span class="tag">tailnet</span></figcaption>
+        </figure>
+        <figure class="shot-tile">
+          <img src="images/screenshot-gui-settings.png" alt="AgentHub desktop app — Settings pane" loading="lazy" />
+          <figcaption><span>Settings</span><span class="tag">config.toml</span></figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="shots-group">
+      <div class="shots-heading">
+        <span>Full-screen · TUI</span>
+        <span class="count">4 views</span>
+        <span class="bar"></span>
+      </div>
+      <div class="shots-grid">
+        <figure class="shot-tile">
+          <img src="images/screenshot-tui-home.png" alt="AgentHub TUI — Home screen in Bubble Tea" loading="lazy" />
+          <figcaption><span>Home</span><span class="tag">agenthub tui</span></figcaption>
+        </figure>
+        <figure class="shot-tile">
+          <img src="images/screenshot-tui-sessions.png" alt="AgentHub TUI — Sessions pane" loading="lazy" />
+          <figcaption><span>Sessions</span><span class="tag">list</span></figcaption>
+        </figure>
+        <figure class="shot-tile">
+          <img src="images/screenshot-tui-remote-sessions.png" alt="AgentHub TUI — Remote sessions pane" loading="lazy" />
+          <figcaption><span>Remote</span><span class="tag">tailnet</span></figcaption>
+        </figure>
+        <figure class="shot-tile">
+          <img src="images/screenshot-tui-settings.png" alt="AgentHub TUI — Settings pane" loading="lazy" />
+          <figcaption><span>Settings</span><span class="tag">config.toml</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section class="section" id="install">
+  <div class="container-wide">
+    <div class="section-title">
+      <div>
+        <span class="eyebrow"><span class="dot"></span> 60 seconds to first session</span>
+        <h2 style="margin-top:16px;">Install.</h2>
+      </div>
+      <p>Pick your platform. AgentHub is a single binary that launches a GUI when you run it with no arguments, and dispatches to CLI or TUI when you pass a subcommand.</p>
+    </div>
+
+    <div class="install">
+      <div class="install-card">
+        <div class="os-head">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          macOS
+          <span class="note">Homebrew</span>
+        </div>
+        <div class="install-code"><button class="copy" data-copy="brew tap scottkw/agenthub && brew install --cask agenthub">Copy</button><span class="cmt"># signed &amp; notarized · universal</span>
+brew tap scottkw/agenthub
+brew install --cask agenthub</div>
+      </div>
+      <div class="install-card">
+        <div class="os-head">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5c4.97 0 9 5.22 9 11.5 0 1.88-.82 3.64-1.85 4.8.25.6.43 1.24.5 1.95.05.44-.1.87-.37 1.1-.34.27-.82.4-1.32.27-1.17-.3-1.84-1.26-2.28-2.1-.53.13-1.08.2-1.68.2a6.6 6.6 0 0 1-1.66-.2c-.45.85-1.12 1.82-2.3 2.1-.5.13-.97 0-1.31-.27-.28-.23-.43-.66-.38-1.1.08-.7.26-1.34.5-1.95C3.83 17.64 3 15.88 3 14 3 7.72 7.03 2.5 12 2.5z"/></svg>
+          Linux
+          <span class="note">deb · 22.04 / 24.04</span>
+        </div>
+        <div class="install-code"><button class="copy" data-copy="curl -LO https://github.com/scottkw/agenthub/releases/latest/download/agenthub-linux-amd64.deb && sudo dpkg -i agenthub-linux-amd64.deb">Copy</button><span class="cmt"># also tar.gz available</span>
+curl -LO https://github.com/scottkw/<span class="cmd">agenthub</span>/releases/
+      latest/download/agenthub-linux-amd64.deb
+sudo dpkg -i agenthub-linux-amd64.deb</div>
+      </div>
+      <div class="install-card">
+        <div class="os-head">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.3 4.4V11.3H3V5.5zM11.2 4.2L21 3V11.3H11.2V4.2zM3 12.2H10.3V19.1L3 18V12.2zM11.2 12.2H21V20.9L11.2 19.6V12.2z"/></svg>
+          Windows
+          <span class="note">WinGet</span>
+        </div>
+        <div class="install-code"><button class="copy" data-copy="winget install scottkw.agenthub">Copy</button><span class="cmt"># NSIS installer on GitHub Releases</span>
+winget install scottkw.agenthub</div>
+      </div>
+    </div>
+
+    <div style="margin-top:48px; background: #0a0d14; border:1px solid var(--line); border-radius: 14px; padding: 28px;">
+      <div class="mono-caption" style="margin-bottom:14px; color: var(--accent);">// first session · any platform</div>
+      <pre class="mono" style="margin:0; font-size:13.5px; line-height:1.8; color: var(--fg); white-space:pre-wrap;"><span style="color:var(--fg-faint);"># launch the GUI</span>
+agenthub
+
+<span style="color:var(--fg-faint);"># or straight to a terminal session</span>
+<span style="color:var(--accent-2);">agenthub new</span> claude-code ~/projects/api
+
+<span style="color:var(--fg-faint);"># attach from another terminal</span>
+<span style="color:var(--accent-2);">agenthub attach</span> $(agenthub list --json | jq -r '.[0].id')
+
+<span style="color:var(--fg-faint);"># share it over Tailscale — QR in the terminal</span>
+<span style="color:var(--accent-2);">agenthub qr</span> &lt;id&gt;</pre>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section">
+  <div class="container-wide">
+    <div class="cta-panel">
+      <span class="eyebrow" style="margin-bottom:16px;"><span class="dot"></span> Ready when you are</span>
+      <h2>Your agents deserve a hub.</h2>
+      <p>Free, open-source, and every binary is signed. Drop into any one of four AI CLIs in a second, and keep them running forever.</p>
+      <div class="actions">
+        <a href="download.html" class="btn btn-primary btn-lg">Download AgentHub</a>
+        <a href="docs.html" class="btn btn-ghost btn-lg">Read the docs</a>
+        <a href="https://github.com/scottkw/agenthub" target="_blank" rel="noopener" class="btn btn-ghost btn-lg">View on GitHub</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="site-chrome.js"></script>
+<script>
+// ---- Hero terminal typing animation ----
+(function () {
+  const target = document.getElementById('term-body');
+  if (!target) return;
+
+  const script = [
+    { text: '', kind: 'blank' },
+    { text: 'scottkw@mbp ~/projects/payments', kind: 'path' },
+    { text: '$ agenthub new claude-code .', kind: 'cmd', typing: true },
+    { text: '✓ found claude-code @ ~/.nvm/versions/node/v20/bin', kind: 'ok' },
+    { text: '✓ session a1b2c3 started · web-served at', kind: 'ok' },
+    { text: '  https://scottkw-mbp.tail.ts.net/s/a1b2', kind: 'url' },
+    { text: '', kind: 'blank' },
+    { text: '╭─ claude code ──────────────────────────────────────╮', kind: 'border' },
+    { text: '│  How can I help you today?                         │', kind: 'border-in' },
+    { text: '╰────────────────────────────────────────────────────╯', kind: 'border' },
+    { text: '', kind: 'blank' },
+    { text: '› refactor the stripe webhook to handle async retries', kind: 'user', typing: true },
+    { text: '', kind: 'blank' },
+    { text: '• Reading src/payments/stripe.ts', kind: 'muted' },
+    { text: '• Reading src/queue/retry.ts', kind: 'muted' },
+    { text: '• Plan: extract handler + exponential backoff', kind: 'muted' },
+    { text: '', kind: 'blank' },
+    { text: 'Edited src/payments/stripe.ts (+34 −12)', kind: 'ok' },
+    { text: 'Edited src/queue/retry.ts     (+18 −3)', kind: 'ok' },
+    { text: 'Created tests/stripe.test.ts  (+62)', kind: 'ok' },
+    { text: '', kind: 'blank' },
+    { text: '✓ 3 files changed · tests passing', kind: 'ok-bold' },
+  ];
+
+  function render(idx, partial) {
+    let out = '';
+    for (let i = 0; i < idx; i++) {
+      out += lineHTML(script[i]);
+    }
+    if (idx < script.length) {
+      const curr = { ...script[idx], text: partial ?? script[idx].text };
+      out += lineHTML(curr, true);
+    }
+    target.innerHTML = out;
+  }
+
+  function lineHTML(item, withCursor = false) {
+    const t = item.text;
+    const c = withCursor ? '<span class="cursor"></span>' : '';
+    switch (item.kind) {
+      case 'blank': return `<div class="line"> </div>`;
+      case 'path': return `<div class="line"><span class="path">${t}</span></div>`;
+      case 'cmd': {
+        const dollarIdx = t.indexOf('$');
+        const before = t.slice(0, dollarIdx + 1);
+        const after = t.slice(dollarIdx + 1);
+        return `<div class="line"><span class="prompt">${escape(before)}</span><span class="white">${escape(after)}</span>${c}</div>`;
+      }
+      case 'user': return `<div class="line"><span class="pink">${escape(t)}</span>${c}</div>`;
+      case 'ok': return `<div class="line"><span class="ok">${escape(t)}</span></div>`;
+      case 'ok-bold': return `<div class="line"><span class="ok" style="font-weight:600">${escape(t)}</span></div>`;
+      case 'url': return `<div class="line"><span class="key">${escape(t)}</span></div>`;
+      case 'muted': return `<div class="line"><span class="muted">${escape(t)}</span></div>`;
+      case 'border': return `<div class="line"><span class="border">${escape(t)}</span></div>`;
+      case 'border-in': return `<div class="line"><span class="border">│</span><span class="white">${escape(t.slice(1, -1))}</span><span class="border">│</span></div>`;
+      case 'err': return `<div class="line"><span class="err">${escape(t)}</span></div>`;
+      default: return `<div class="line">${escape(t)}</div>`;
+    }
+  }
+  function escape(s) { return s.replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  let i = 0;
+  function step() {
+    const item = script[i];
+    if (!item) {
+      // loop
+      setTimeout(() => { target.innerHTML = ''; i = 0; step(); }, 4500);
+      return;
+    }
+    if (item.typing) {
+      let p = 0;
+      const t = item.text;
+      const type = () => {
+        p++;
+        render(i, t.slice(0, p));
+        if (p < t.length) setTimeout(type, 28 + Math.random() * 30);
+        else { i++; setTimeout(step, 500); }
+      };
+      type();
+    } else {
+      i++;
+      render(i);
+      setTimeout(step, item.kind === 'blank' ? 120 : 240);
+    }
+  }
+  setTimeout(step, 400);
+})();
+
+// ---- Copy buttons ----
+document.querySelectorAll('.copy').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const text = btn.dataset.copy || '';
+    navigator.clipboard?.writeText(text);
+    const o = btn.textContent;
+    btn.classList.add('copied');
+    btn.textContent = 'Copied';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = o; }, 1400);
+  });
+});
+
+// ---- Gallery tab switcher ----
+(function () {
+  const gallery = document.getElementById('gallery');
+  if (!gallery) return;
+  const tabs  = gallery.querySelectorAll('.gallery-tab');
+  const shots = gallery.querySelectorAll('.gallery-stage .shot');
+  const caps  = gallery.querySelectorAll('.gallery-cap');
+
+  function show(key) {
+    tabs.forEach(t => {
+      const on = t.dataset.shot === key;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    shots.forEach(s => s.classList.toggle('active', s.dataset.shot === key));
+    caps.forEach(c => c.classList.toggle('active', c.dataset.shot === key));
+  }
+
+  tabs.forEach(t => {
+    t.addEventListener('click', () => show(t.dataset.shot));
+  });
+
+  // Keyboard: 1-7 switches when gallery is in view
+  const keyMap = { '1':'claude', '2':'codex', '3':'gemini', '4':'opencode', '5':'sessions', '6':'remote', '7':'settings' };
+  window.addEventListener('keydown', (e) => {
+    if (e.target.matches('input, textarea, select')) return;
+    const key = keyMap[e.key];
+    if (!key) return;
+    const rect = gallery.getBoundingClientRect();
+    const inView = rect.top < window.innerHeight * 0.8 && rect.bottom > window.innerHeight * 0.2;
+    if (inView) { show(key); e.preventDefault(); }
+  });
+})();
+
+</script>
+</body>
+</html>

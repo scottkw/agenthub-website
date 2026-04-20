@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Download · AgentHub</title>
+<meta name="description" content="Download AgentHub for macOS, Linux, and Windows." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="site.css" />
+<style>
+.dl-hero { padding: 80px 0 32px; text-align: center; }
+.dl-hero h1 { font-size: clamp(40px, 5vw, 64px); margin-bottom: 18px; }
+.dl-hero h1 .accent { color: var(--accent); }
+.dl-hero p { color: var(--fg-dim); max-width: 56ch; margin: 0 auto; font-size: 18px; }
+.dl-version {
+  display: inline-flex; gap: 10px; align-items: center;
+  padding: 6px 14px; border-radius: 999px;
+  background: var(--bg-1); border: 1px solid var(--line);
+  font-family: var(--font-mono); font-size: 12.5px; color: var(--fg-dim);
+  margin-bottom: 20px;
+}
+.dl-version .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+.dl-version a { color: var(--accent); }
+
+/* Platform picker */
+.dl-picker {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  max-width: 900px; margin: 48px auto 0;
+}
+.dl-tile {
+  background: linear-gradient(180deg, var(--bg-1), var(--bg));
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 32px 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s ease;
+  position: relative;
+}
+.dl-tile:hover { border-color: var(--line-2); transform: translateY(-2px); }
+.dl-tile.active {
+  border-color: var(--accent-edge);
+  background: linear-gradient(180deg, rgba(76,139,255,0.06), var(--bg));
+  box-shadow: 0 0 0 1px var(--accent-edge);
+}
+.dl-tile .os-icon {
+  width: 48px; height: 48px;
+  display: inline-grid; place-items: center;
+  margin-bottom: 14px;
+  color: var(--fg);
+}
+.dl-tile .os-icon svg { width: 38px; height: 38px; }
+.dl-tile h3 { font-size: 20px; margin-bottom: 6px; font-weight: 600; }
+.dl-tile .sub { font-size: 13px; color: var(--fg-faint); font-family: var(--font-mono); }
+.dl-tile.recommended::after {
+  content: "Recommended";
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: white;
+  font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em;
+  padding: 3px 10px; border-radius: 999px;
+}
+
+/* Detail panel */
+.dl-detail {
+  max-width: 900px; margin: 32px auto 0;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all .3s ease;
+}
+.dl-panel { display: none; padding: 36px 40px; }
+.dl-panel.active { display: block; }
+.dl-panel h2 { font-size: 24px; margin-bottom: 6px; }
+.dl-panel .muted { color: var(--fg-dim); margin-bottom: 28px; font-size: 15px; }
+
+.dl-options { display: grid; gap: 12px; margin-bottom: 28px; }
+.dl-opt {
+  display: flex; align-items: center; gap: 18px;
+  padding: 18px 22px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.dl-opt.primary {
+  background: linear-gradient(180deg, rgba(76,139,255,0.06), rgba(76,139,255,0.01));
+  border-color: var(--accent-edge);
+}
+.dl-opt .info { flex: 1; min-width: 0; }
+.dl-opt .info .name { font-weight: 500; margin-bottom: 2px; }
+.dl-opt .info .meta { font-family: var(--font-mono); font-size: 12px; color: var(--fg-faint); }
+.dl-opt .btn { flex-shrink: 0; }
+
+.dl-cmd {
+  background: #0a0d14;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px 14px 18px;
+  font-family: var(--font-mono); font-size: 13px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.dl-cmd code {
+  color: var(--fg); flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dl-cmd code .prompt { color: var(--fg-faint); margin-right: 6px; }
+.dl-cmd .copy {
+  padding: 4px 10px; font-size: 11.5px;
+  background: var(--bg-2); border: 1px solid var(--line);
+  border-radius: 6px; color: var(--fg-dim);
+  cursor: pointer; font-family: inherit;
+  transition: all .15s ease;
+}
+.dl-cmd .copy:hover { color: var(--fg); border-color: var(--line-2); }
+.dl-cmd .copy.copied { color: var(--ok); }
+
+.dl-prereq {
+  border-top: 1px solid var(--line); padding-top: 24px; margin-top: 16px;
+  font-size: 14px; color: var(--fg-dim);
+}
+.dl-prereq h4 {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--fg-faint); font-weight: 500; margin-bottom: 12px;
+}
+.dl-prereq ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; line-height: 1.55; }
+.dl-prereq ul li::marker { color: var(--fg-faint); }
+.dl-prereq code {
+  font-family: var(--font-mono); font-size: 12.5px;
+  padding: 1px 6px; background: var(--bg-2); border-radius: 4px;
+  border: 1px solid var(--line); color: var(--fg);
+}
+
+.releases {
+  max-width: 900px; margin: 64px auto 0;
+}
+.release {
+  display: grid; grid-template-columns: 110px 1fr auto; gap: 20px;
+  align-items: center;
+  padding: 18px 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+.release .ver {
+  font-family: var(--font-mono); font-weight: 600; color: var(--fg);
+}
+.release .ver .latest {
+  display: inline-block; margin-left: 6px;
+  padding: 1px 8px; background: var(--accent); color: white;
+  font-size: 10px; border-radius: 4px; font-weight: 500; vertical-align: 1px;
+}
+.release .notes { color: var(--fg-dim); font-size: 14px; }
+.release .date { font-family: var(--font-mono); font-size: 12px; color: var(--fg-faint); }
+
+.checksum-card {
+  max-width: 900px; margin: 32px auto 0;
+  padding: 22px 28px;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex; align-items: center; gap: 18px;
+}
+.checksum-card svg { flex-shrink: 0; color: var(--accent); }
+.checksum-card .txt { font-size: 14px; color: var(--fg-dim); }
+.checksum-card .txt strong { color: var(--fg); display: block; margin-bottom: 2px; }
+.checksum-card .txt code { font-family: var(--font-mono); }
+
+@media (max-width: 720px) {
+  .dl-picker { grid-template-columns: 1fr; }
+  .dl-panel { padding: 24px 20px; }
+  .dl-opt { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .release { grid-template-columns: 1fr; gap: 6px; }
+}
+</style>
+</head>
+<body data-page="download">
+
+<section class="container-wide dl-hero">
+  <div class="dl-version">
+    <span class="dot"></span>
+    Latest: v3.0 · released Apr 19, 2026 · <a href="https://github.com/scottkw/agenthub/releases" target="_blank" rel="noopener">all releases</a>
+  </div>
+  <h1>Download <span class="accent">AgentHub</span></h1>
+  <p>Free, open-source, and every binary is signed. Pick your platform — each install ships with the GUI, CLI, and TUI in a single binary.</p>
+</section>
+
+<div class="container-wide">
+  <!-- Platform picker -->
+  <div class="dl-picker" role="tablist">
+    <button class="dl-tile recommended active" data-os="mac" role="tab">
+      <div class="os-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      </div>
+      <h3>macOS</h3>
+      <div class="sub">universal · signed</div>
+    </button>
+    <button class="dl-tile" data-os="linux" role="tab">
+      <div class="os-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5c4.97 0 9 5.22 9 11.5 0 1.88-.82 3.64-1.85 4.8.25.6.43 1.24.5 1.95.05.44-.1.87-.37 1.1-.34.27-.82.4-1.32.27-1.17-.3-1.84-1.26-2.28-2.1-.53.13-1.08.2-1.68.2a6.6 6.6 0 0 1-1.66-.2c-.45.85-1.12 1.82-2.3 2.1-.5.13-.97 0-1.31-.27-.28-.23-.43-.66-.38-1.1.08-.7.26-1.34.5-1.95C3.83 17.64 3 15.88 3 14 3 7.72 7.03 2.5 12 2.5z"/></svg>
+      </div>
+      <h3>Linux</h3>
+      <div class="sub">amd64 · deb / tar</div>
+    </button>
+    <button class="dl-tile" data-os="win" role="tab">
+      <div class="os-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.3 4.4V11.3H3V5.5zM11.2 4.2L21 3V11.3H11.2V4.2zM3 12.2H10.3V19.1L3 18V12.2zM11.2 12.2H21V20.9L11.2 19.6V12.2z"/></svg>
+      </div>
+      <h3>Windows</h3>
+      <div class="sub">amd64 · NSIS</div>
+    </button>
+  </div>
+
+  <!-- Detail panels -->
+  <div class="dl-detail">
+    <!-- macOS -->
+    <div class="dl-panel active" data-panel="mac">
+      <h2>AgentHub for macOS</h2>
+      <p class="muted">Universal binary (Apple Silicon + Intel). Signed with a Developer ID and notarized by Apple.</p>
+
+      <div class="dl-options">
+        <div class="dl-opt primary">
+          <div class="info">
+            <div class="name">Direct download — .dmg</div>
+            <div class="meta">agenthub-v3.0-darwin-universal.dmg · 42 MB</div>
+          </div>
+          <a href="https://github.com/scottkw/agenthub/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download .dmg
+          </a>
+        </div>
+      </div>
+
+      <h4 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-faint); font-weight: 500; margin-bottom: 12px;">Or via Homebrew</h4>
+      <div class="dl-cmd">
+        <code><span class="prompt">$</span>brew tap scottkw/agenthub && brew install --cask agenthub</code>
+        <button class="copy" data-copy="brew tap scottkw/agenthub && brew install --cask agenthub">Copy</button>
+      </div>
+
+      <div class="dl-prereq">
+        <h4>Requirements</h4>
+        <ul>
+          <li>macOS 11 Big Sur or later</li>
+          <li>For the Xcode Command Line Tools: <code>xcode-select --install</code> (only needed if building from source)</li>
+          <li><strong>Optional:</strong> <a href="https://tailscale.com" target="_blank" rel="noopener">Tailscale</a> enables zero-config browser-trusted TLS for shared sessions</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Linux -->
+    <div class="dl-panel" data-panel="linux">
+      <h2>AgentHub for Linux</h2>
+      <p class="muted">Built for amd64 on Ubuntu 22.04 and 24.04. Both WebKitGTK 4.0 and 4.1 are supported.</p>
+
+      <div class="dl-options">
+        <div class="dl-opt primary">
+          <div class="info">
+            <div class="name">Debian / Ubuntu — .deb</div>
+            <div class="meta">agenthub-v3.0-linux-amd64.deb · 48 MB</div>
+          </div>
+          <a href="https://github.com/scottkw/agenthub/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download .deb
+          </a>
+        </div>
+        <div class="dl-opt">
+          <div class="info">
+            <div class="name">Generic archive — .tar.gz</div>
+            <div class="meta">agenthub-v3.0-linux-amd64.tar.gz · 46 MB</div>
+          </div>
+          <a href="https://github.com/scottkw/agenthub/releases/latest" target="_blank" rel="noopener" class="btn btn-ghost">Download .tar.gz</a>
+        </div>
+      </div>
+
+      <h4 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-faint); font-weight: 500; margin-bottom: 12px;">Install the .deb</h4>
+      <div class="dl-cmd">
+        <code><span class="prompt">$</span>sudo dpkg -i agenthub-v3.0-linux-amd64.deb</code>
+        <button class="copy" data-copy="sudo dpkg -i agenthub-v3.0-linux-amd64.deb">Copy</button>
+      </div>
+
+      <div class="dl-prereq">
+        <h4>Runtime requirements</h4>
+        <ul>
+          <li>Ubuntu 22.04+ or Debian 12+ (glibc 2.35+)</li>
+          <li><strong>Ubuntu 24.04 / Debian 13+:</strong> <code>libgtk-3 libwebkit2gtk-4.1</code></li>
+          <li><strong>Ubuntu 22.04:</strong> <code>libgtk-3 libwebkit2gtk-4.0</code></li>
+          <li>D-Bus (for system tray via StatusNotifierItem — GNOME/KDE/XFCE)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Windows -->
+    <div class="dl-panel" data-panel="win">
+      <h2>AgentHub for Windows</h2>
+      <p class="muted">NSIS installer for Windows 10 and 11 on amd64. Standalone .exe is also available.</p>
+
+      <div class="dl-options">
+        <div class="dl-opt primary">
+          <div class="info">
+            <div class="name">NSIS installer — .exe</div>
+            <div class="meta">agenthub-v3.0-windows-amd64-installer.exe · 50 MB</div>
+          </div>
+          <a href="https://github.com/scottkw/agenthub/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download installer
+          </a>
+        </div>
+        <div class="dl-opt">
+          <div class="info">
+            <div class="name">Standalone executable</div>
+            <div class="meta">agenthub-v3.0-windows-amd64.exe · 48 MB</div>
+          </div>
+          <a href="https://github.com/scottkw/agenthub/releases/latest" target="_blank" rel="noopener" class="btn btn-ghost">Download .exe</a>
+        </div>
+      </div>
+
+      <h4 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-faint); font-weight: 500; margin-bottom: 12px;">Or via WinGet</h4>
+      <div class="dl-cmd">
+        <code><span class="prompt">&gt;</span>winget install scottkw.agenthub</code>
+        <button class="copy" data-copy="winget install scottkw.agenthub">Copy</button>
+      </div>
+
+      <div class="dl-prereq">
+        <h4>Requirements</h4>
+        <ul>
+          <li>Windows 10 version 1809+ or Windows 11 on amd64</li>
+          <li><a href="https://developer.microsoft.com/en-us/microsoft-edge/webview2/" target="_blank" rel="noopener">WebView2 runtime</a> — bundled on Windows 11; install manually on Windows 10</li>
+          <li>WinGet availability pending Microsoft review. Direct download is available today.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checksums -->
+  <div class="checksum-card">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+    <div class="txt">
+      <strong>Verify your download</strong>
+      Every release ships a <code>checksums.txt</code> with SHA-256 hashes for every artifact. Check the <a href="https://github.com/scottkw/agenthub/releases/latest" target="_blank" rel="noopener" style="color:var(--accent);">latest release page</a> for the signed manifest.
+    </div>
+  </div>
+
+  <!-- Recent releases -->
+  <div class="releases">
+    <h2 style="font-size: 22px; margin-bottom: 20px;">Recent releases</h2>
+    <div class="release">
+      <div class="ver">v3.0 <span class="latest">Latest</span></div>
+      <div class="notes">TUI mode with Bubble Tea v2, unified remote session list, quit-confirmation modal, auto-close toast.</div>
+      <div class="date">Apr 19, 2026</div>
+    </div>
+    <div class="release">
+      <div class="ver">v2.4</div>
+      <div class="notes">Local-network fallback mode with self-signed TLS + password auth. Settings as sidebar tab.</div>
+      <div class="date">Mar 2026</div>
+    </div>
+    <div class="release">
+      <div class="ver">v2.3</div>
+      <div class="notes">138 curated terminal themes. Per-tab font size. Session auto-close with Keep Open.</div>
+      <div class="date">Feb 2026</div>
+    </div>
+    <div class="release">
+      <div class="ver">v2.2</div>
+      <div class="notes">Multi-client relay hub. Read-only observers. Max-wins resize arbitration.</div>
+      <div class="date">Jan 2026</div>
+    </div>
+    <p style="text-align: center; margin-top: 20px; font-size: 14px;">
+      <a href="https://github.com/scottkw/agenthub/releases" target="_blank" rel="noopener" style="color: var(--accent);">View all 25 releases on GitHub →</a>
+    </p>
+  </div>
+</div>
+
+<script src="site-chrome.js"></script>
+<script>
+// Platform auto-detect
+(function () {
+  const ua = navigator.userAgent.toLowerCase();
+  let os = 'mac';
+  if (ua.includes('win')) os = 'win';
+  else if (ua.includes('linux') || ua.includes('x11')) os = 'linux';
+  activate(os);
+
+  document.querySelectorAll('.dl-tile').forEach(tile => {
+    tile.addEventListener('click', () => activate(tile.dataset.os));
+  });
+  function activate(os) {
+    document.querySelectorAll('.dl-tile').forEach(t => t.classList.toggle('active', t.dataset.os === os));
+    document.querySelectorAll('.dl-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === os));
+  }
+})();
+
+// Copy buttons
+document.querySelectorAll('.copy').forEach(btn => {
+  btn.addEventListener('click', () => {
+    navigator.clipboard?.writeText(btn.dataset.copy || '');
+    const o = btn.textContent;
+    btn.classList.add('copied');
+    btn.textContent = 'Copied';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = o; }, 1400);
+  });
+});
+</script>
+</body>
+</html>

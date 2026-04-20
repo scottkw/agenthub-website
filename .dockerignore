@@ -1,0 +1,8 @@
+claude-design-agenthub-website/
+.git/
+.gitignore
+.DS_Store
+*.md
+docker-compose.yml
+Dockerfile
+.dockerignore
