@@ -3,3 +3,7 @@
 .vscode/
 *.log
 node_modules/
+
+# Original Claude Design export — contains unredacted screenshots.
+# Keep locally as reference; never publish.
+claude-design-agenthub-website/
