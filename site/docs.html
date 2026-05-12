@@ -212,6 +212,7 @@ kbd {
         <li><a href="#multi-client">Multi-client</a></li>
         <li><a href="#remote">Remote &amp; Tailscale</a></li>
         <li><a href="#status">Status &amp; themes</a></li>
+        <li><a href="#plugins">Plugins (v3.2)</a></li>
       </ul>
       <h5>Operations</h5>
       <ul>
@@ -228,7 +229,7 @@ kbd {
 
       <div class="callout">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/></svg>
-        <div><strong>Working on v3.1 (May 2026)</strong>These docs track the latest release. For older releases, use the version switcher on GitHub.</div>
+        <div><strong>Working on v3.2 (May 2026)</strong>These docs track the latest release. For older releases, use the version switcher on GitHub.</div>
       </div>
 
       <h2 id="getting-started">Quickstart</h2>
@@ -300,6 +301,9 @@ kbd {
       <h3>Daemon</h3>
 <pre><code><span class="kw">agenthub daemon</span> install | uninstall | start | stop | status</code></pre>
 
+      <h3>Configuration</h3>
+<pre><code><span class="kw">agenthub settings</span>                   <span class="cmt"># show current settings</span></code></pre>
+
       <h3>Attach keys</h3>
       <table>
         <thead><tr><th>Key</th><th>Action</th></tr></thead>
@@ -338,8 +342,12 @@ kbd {
       </ul>
 
       <h2 id="remote">Remote &amp; Tailscale</h2>
-      <p>When Tailscale is running, AgentHub auto-discovers other AgentHub peers on your tailnet and auto-serves sessions over HTTPS with Let's Encrypt certificates — no port forwarding, no self-signed warnings.</p>
-      <p>Without Tailscale, the web server falls back to self-signed TLS on your local network with HTTP Basic Auth using a generated password. Grab the password from <strong>Settings → Web Server</strong>. AgentHub upgrades automatically to Tailscale mode once it detects a connected daemon.</p>
+      <p>When Tailscale is running, AgentHub auto-discovers other AgentHub peers on your tailnet and runs the web server over HTTPS with Let's Encrypt certificates — no port forwarding, no self-signed warnings. Without Tailscale, the web server falls back to self-signed TLS on your local network with HTTP Basic Auth using a generated password from <strong>Settings → Web Server</strong>. AgentHub upgrades automatically to Tailscale mode once it detects a connected daemon.</p>
+
+      <div class="callout">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+        <div><strong>Sharing is explicit (v3.1+)</strong>The web server runs by default, but individual sessions are <em>not</em> auto-exposed. Each share is a deliberate action — toggle web access on a session (GUI/CLI) and AgentHub mints an HMAC-signed, session-bound capability token. The returned share URL carries that token as <code>?cap=&lt;...&gt;</code>; QR codes encode a short <code>/join?code=XXXX-XXXX</code> exchange so leaked screenshots never grant access. Read-only is enforced server-side from the token's claims, not the query string. Use <strong>Settings → Security → Regenerate Signing Key</strong> as a panic button to invalidate every outstanding capability across all sessions.</div>
+      </div>
 <pre><code><span class="cmt"># list remote sessions across your tailnet</span>
 <span class="kw">agenthub list</span>
 <span class="cmt"># HOST             ID       AGENT   NAME       VIEWERS</span>
@@ -367,6 +375,25 @@ kbd {
       <p>Status heuristics are catalogued for Claude Code today; other CLIs show <em>running</em> until their patterns are added.</p>
       <p>AgentHub ships with <strong>138 WCAG-audited terminal themes</strong> from the xterm-theme library. Pick one in <strong>Settings → Appearance</strong>; it applies live to every open terminal (including OpenCode, which honors theme changes via SIGUSR2 broadcast) and persists across restarts.</p>
 
+      <h2 id="plugins">Terminal plugins (v3.2)</h2>
+      <p>The terminal core is extended by a curated, <strong>vendored</strong> xterm.js addon suite — eight plugins bundled under <code>web/vendor/xterm/addons/</code> with a CI-enforced version-parity gate. Zero runtime CDN fetches, fully CSP-compatible across Chromium, Firefox, and WebKit. Toggle each from <strong>Settings → Plugins</strong>; daemon settings are the source of truth and hot-swap to live sessions where possible.</p>
+
+      <table>
+        <thead><tr><th>Plugin</th><th>What it does</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><strong>WebGL renderer</strong></td><td>GPU-accelerated terminal rendering</td><td>Auto-falls-back to DOM on context loss with an 8-second toast; proactive software-rasterizer detection (SwiftShader / llvmpipe / ANGLE-software / iPad Safari)</td></tr>
+          <tr><td><strong>Search</strong></td><td>Scrollback search via a Cmd-F find bar</td><td>Desktop + web. Regex / case / whole-word toggles, persisted defaults, next/prev (Enter, Cmd-G), match count, 10K-line perf budget</td></tr>
+          <tr><td><strong>Web Links</strong></td><td>Clickable URLs in terminal output</td><td>Strict scheme allowlist (<code>https</code>, <code>http</code>, <code>mailto</code> — never <code>file://</code> or <code>javascript:</code>). Cmd/Ctrl-click only — single-click never activates. IDN/Punycode + 30-entry typosquat confirmation popover. Desktop opens via Wails <code>BrowserOpenURL</code>; web uses <code>_blank</code> + <code>noopener,noreferrer</code></td></tr>
+          <tr><td><strong>Inline images (sixel)</strong></td><td>Render sixel-encoded images directly in the terminal</td><td>Per-tab storage limit defaults to 16 MB (configurable). CSP carves out a minimal <code>'wasm-unsafe-eval'</code> for the audited sixel decoder. Multi-client byte-fidelity preserved</td></tr>
+          <tr><td><strong>Unicode 11</strong></td><td>Correct wide-character and emoji width tables</td><td>Buffer-interpretation plugin — applies to new sessions only; web clients share the daemon-side setting so multi-client wrap stays identical</td></tr>
+          <tr><td><strong>Save Terminal As…</strong></td><td>Save current scrollback to a <code>.txt</code> file</td><td>Right-click a tab → native Save dialog. Explicit gesture only — no auto-save / no on-disk capture</td></tr>
+          <tr><td><strong>OSC 52 clipboard</strong></td><td>System clipboard read/write from terminal escape sequences</td><td>On web-served sessions, write access honors the session capability — read-only viewers can't have OSC 52 writes affect their clipboard</td></tr>
+          <tr><td><strong>OSC 9;4 progress</strong></td><td>Long-running task progress in per-tab underlines + tray quartile glyph</td><td>Off by default in v3.2 — opt-in until field validation; debounced at 200ms</td></tr>
+        </tbody>
+      </table>
+
+      <p>Three plugins (Search, Web Links, Inline Images) expose per-plugin sub-config in inline disclosures (regex/case/word defaults; modifier-key + risk policy; image storage limit). Sub-key changes persist immediately — no "Save Plugins" required. Cross-browser e2e enforces zero CSP violations in CI (Chromium + Firefox + WebKit via Playwright).</p>
+
       <h2 id="daemon">Daemon management</h2>
       <p>The daemon runs as a background process owning all PTYs, the relay hub, and the web server. Communication happens over a Unix socket (macOS/Linux) or named pipe (Windows).</p>
       <p>Register AgentHub as a login service so sessions survive reboots:</p>
@@ -377,11 +404,13 @@ kbd {
       <h2 id="settings">Settings</h2>
       <p>Settings live as a single scrollable page in the sidebar — no modals, no sub-tabs.</p>
       <ul>
+        <li><strong>Plugins</strong> (v3.2) — 8 toggles for the xterm.js addon suite, with inline disclosures for Search / Web Links / Inline Images sub-config; hot-swap for runtime plugins, "Applies to new sessions" inline for the rest</li>
+        <li><strong>Appearance</strong> — 138 terminal themes, live preview</li>
+        <li><strong>Web Server</strong> — start/stop, mode-aware status, URL actions (open / copy / inline QR), local-network password with click-to-copy</li>
+        <li><strong>Security</strong> (v3.1) — Regenerate Signing Key panic button (invalidates every outstanding capability across all sessions), Tailscale 4-state status indicator with collapsible diagnostics, Certificate Transparency disclosure</li>
+        <li><strong>Paths</strong> — override auto-detected CLI binaries with a native folder picker</li>
         <li><strong>Behavior</strong> — start minimized to the system tray</li>
         <li><strong>Session Behavior</strong> — auto-close tab on clean exit</li>
-        <li><strong>Appearance</strong> — 138 terminal themes, live preview</li>
-        <li><strong>Web Server</strong> — start/stop, mode-aware status, URL actions, local-network password</li>
-        <li><strong>Paths</strong> — override auto-detected CLI binaries with a native folder picker</li>
       </ul>
 
       <h2 id="troubleshooting">Troubleshooting</h2>
@@ -409,6 +438,7 @@ kbd {
         <li><a href="#multi-client">Multi-client</a></li>
         <li><a href="#remote">Remote &amp; Tailscale</a></li>
         <li><a href="#status">Status &amp; themes</a></li>
+        <li><a href="#plugins">Plugins (v3.2)</a></li>
         <li><a href="#daemon">Daemon management</a></li>
         <li><a href="#settings">Settings</a></li>
         <li><a href="#troubleshooting">Troubleshooting</a></li>

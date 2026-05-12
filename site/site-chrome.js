@@ -48,7 +48,7 @@
           <p class="faint" style="margin-top:14px; max-width: 36ch; font-size: 14px;">
             A desktop app, CLI, and TUI for running — and sharing — AI coding sessions.
           </p>
-          <p class="mono-caption" style="margin-top:18px;">v3.1 · MIT</p>
+          <p class="mono-caption" style="margin-top:18px;">v3.2 · MIT</p>
         </div>
         <div>
           <h4>Product</h4>

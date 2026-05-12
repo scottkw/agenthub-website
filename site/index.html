@@ -614,7 +614,7 @@
   <div class="container-wide">
     <div class="hero-grid">
       <div>
-        <span class="eyebrow"><span class="dot"></span> v3.1 — May 2026</span>
+        <span class="eyebrow"><span class="dot"></span> v3.2 — May 2026</span>
         <h1>
           One hub for every<br/>
           <span class="strike">AI coding session.</span>
@@ -758,7 +758,7 @@
               </g>
             </svg>
           </div>
-          <div class="url">scottkw-mbp.tail.ts.net/s/a1b2</div>
+          <div class="url">scottkw-mbp.tail.ts.net/join?code=A7K-4P2N</div>
         </div>
       </div>
     </div>
@@ -813,7 +813,7 @@
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></div>
         <h3>Share over Tailscale</h3>
-        <p>Auto-serves sessions on your tailnet with Let's Encrypt TLS. No firewall holes. Falls back to self-signed TLS + password auth on LAN when Tailscale isn't available.</p>
+        <p>Share a session with one click. Each share mints an HMAC-signed, session-bound capability token; QR codes encode a short <code>/join</code> exchange code, not the cap URL. Let's Encrypt TLS on Tailscale, self-signed TLS + password fallback on LAN.</p>
       </div>
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="4"/><circle cx="17" cy="17" r="4"/><path d="M9 13v4M13 9h4"/></svg></div>
@@ -839,6 +839,16 @@
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
         <h3>Status bar that stays</h3>
         <p>Tmux-style persistent status bar during CLI attach. Shows session name, agent, hostname, elapsed time, and live viewer count without corrupting output.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><circle cx="8" cy="11" r="1.6" fill="currentColor"/><circle cx="12" cy="11" r="1.6" fill="currentColor"/><circle cx="16" cy="11" r="1.6" fill="currentColor"/></svg></div>
+        <h3>Power-user plugin suite <span style="color:var(--fg-faint); font-weight:500;">(v3.2)</span></h3>
+        <p>Eight curated, vendored xterm.js addons: WebGL renderer (with software-fallback detection), <kbd>Cmd-F</kbd> scrollback search, safe web-links with IDN/typosquat confirmation, inline sixel images, Unicode 11, "Save Terminal As…", OSC 52 clipboard, OSC 9;4 progress. All toggle-able from Settings, hot-swap where possible.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 7v6c0 5 4 9 9 10 5-1 9-5 9-10V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h3>Hardened by default <span style="color:var(--fg-faint); font-weight:500;">(v3.1)</span></h3>
+        <p>HMAC-signed, session-bound capability tokens for every share. Server-bound read-only. Strict WebSocket Origin allowlist. Vendored xterm assets with a strict CSP. Signed + notarized releases with SLSA L2 build provenance. One-click signing-key panic button.</p>
       </div>
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l4 8 8 1-6 6 2 8-8-4-8 4 2-8-6-6 8-1z"/></svg></div>
@@ -919,12 +929,13 @@
       <div>
         <span class="eyebrow"><span class="dot" style="background:var(--opencode); box-shadow:0 0 10px var(--opencode);"></span> Remote &amp; shared</span>
         <h2 style="margin-top:16px;">Share a session like a URL.</h2>
-        <p class="lede">Every session auto-serves over HTTPS on your tailnet with browser-trusted certificates — no port forwarding, no firewall rules. A QR code is generated for every session, so your phone joins with a scan.</p>
+        <p class="lede">Flip one toggle and AgentHub mints an HMAC-signed, session-bound capability token. The share URL carries the cap; the QR encodes a short <code>/join</code> exchange code so a leaked screenshot never grants access. Sharing is explicit — sessions don't auto-expose.</p>
         <ul class="bf-list">
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Tailscale peer discovery</strong> <span>— AgentHub instances on your tailnet appear in the Remote tab.</span></div></li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Zero-config TLS</strong> <span>— Let's Encrypt via Tailscale's <code>GetCertificate</code>, with a self-signed + password-auth fallback.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Zero-config TLS</strong> <span>— Let's Encrypt via Tailscale's <code>GetCertificate</code>, with a self-signed + password-auth fallback on LAN.</span></div></li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>CLI attach across machines</strong> <span>— <code>agenthub attach hostname:id</code> proxies over WSS.</span></div></li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Read-only observers</strong> <span>— drop <code>--readonly</code> and watch without sending keystrokes.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Server-bound read-only</strong> <span>— read-only is a claim in the capability, not a query string. Reconnecting without <code>?readonly</code> can't bypass it.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Panic button</strong> <span>— <em>Regenerate Signing Key</em> invalidates every outstanding capability across every session in one click.</span></div></li>
         </ul>
       </div>
       <div class="bf-visual">
@@ -1151,7 +1162,7 @@
           </span>
           <span class="gallery-cap" data-shot="settings">
             <span class="gc-title">Settings</span>
-            <span class="gc-desc">Tray behavior, auto-close rules, terminal theme (138 to choose from), Tailscale hostname, certificate transparency acknowledgement, and port.</span>
+            <span class="gc-desc">v3.2 Plugins panel (8 toggles with inline disclosures), 138 terminal themes, web server controls, v3.1 Security (Regenerate Signing Key, Tailscale 4-state status, CT disclosure), CLI path overrides, tray behavior, and auto-close rules.</span>
             <span class="gc-meta">~/.config/agenthub/config.toml</span>
           </span>
         </div>
@@ -1379,8 +1390,12 @@ agenthub
     { text: 'scottkw@mbp ~/projects/payments', kind: 'path' },
     { text: '$ agenthub new claude-code .', kind: 'cmd', typing: true },
     { text: '✓ found claude-code @ ~/.nvm/versions/node/v20/bin', kind: 'ok' },
-    { text: '✓ session a1b2c3 started · web-served at', kind: 'ok' },
-    { text: '  https://scottkw-mbp.tail.ts.net/s/a1b2', kind: 'url' },
+    { text: '✓ session a1b2c3 started · local only', kind: 'ok' },
+    { text: '', kind: 'blank' },
+    { text: '$ agenthub serve a1b2c3', kind: 'cmd', typing: true },
+    { text: '✓ share link (HMAC-signed capability):', kind: 'ok' },
+    { text: '  https://scottkw-mbp.tail.ts.net/sessions/a1b2c3?cap=…', kind: 'url' },
+    { text: '  qr → /join?code=A7K-4P2N', kind: 'muted' },
     { text: '', kind: 'blank' },
     { text: '╭─ claude code ──────────────────────────────────────╮', kind: 'border' },
     { text: '│  How can I help you today?                         │', kind: 'border-in' },
