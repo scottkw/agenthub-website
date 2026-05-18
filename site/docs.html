@@ -209,6 +209,7 @@ kbd {
       </ul>
       <h5>Sessions</h5>
       <ul>
+        <li><a href="#shell-sessions">Shell sessions <span style="color:var(--fg-faint);">(v3.3)</span></a></li>
         <li><a href="#multi-client">Multi-client</a></li>
         <li><a href="#remote">Remote &amp; Tailscale</a></li>
         <li><a href="#status">Status &amp; themes</a></li>
@@ -229,7 +230,7 @@ kbd {
 
       <div class="callout">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/></svg>
-        <div><strong>Working on v3.2 (May 2026)</strong>These docs track the latest release. For older releases, use the version switcher on GitHub.</div>
+        <div><strong>Working on v3.3 (May 2026)</strong>These docs track the latest release. For older releases, use the version switcher on GitHub.</div>
       </div>
 
       <h2 id="getting-started">Quickstart</h2>
@@ -255,7 +256,7 @@ kbd {
 <span class="cmt"># list everything running across your machines</span>
 <span class="kw">agenthub list</span></code></pre>
 
-      <p>Agent CLIs (Claude Code, Codex, Gemini CLI, OpenCode) are auto-detected across common install locations on startup — nvm, Volta, Homebrew, snap, flatpak, cargo, pipx, and platform-specific paths. If an agent isn't found, override its path in <strong>Settings → Paths</strong>.</p>
+      <p>Agent CLIs (Claude Code, Codex, Gemini CLI, OpenCode) are auto-detected across common install locations on startup — nvm, Volta, Homebrew, snap, flatpak, cargo, pipx, and platform-specific paths. If an agent isn't found, override its path in <strong>Settings → Paths</strong>. A raw shell (bash / zsh / fish / PowerShell / cmd.exe) is always available too — see <a href="#shell-sessions">Shell sessions</a>.</p>
 
       <h2 id="gui">Desktop GUI</h2>
       <p>The Wails-based desktop app gives you tabbed terminals, a collapsible sidebar, and in-app settings. Closing the window hides it to the tray — sessions keep running in the daemon.</p>
@@ -332,6 +333,31 @@ kbd {
 
       <p>Sessions render inside bordered lipgloss frames with colored per-agent badges. Attach suspends the TUI and enters raw PTY mode; <kbd>Ctrl</kbd>+<kbd>\</kbd> returns you. The session list auto-refreshes every 2 seconds with selection preserved by identity.</p>
 
+      <h2 id="shell-sessions">Shell sessions <span style="color:var(--fg-faint); font-weight:500; font-size:0.72em; letter-spacing:0.02em;">v3.3</span></h2>
+      <p>Alongside the four AI CLIs, AgentHub runs raw PTY shell sessions — <code>bash</code>, <code>zsh</code>, <code>fish</code>, <code>dash</code>, <code>powershell.exe</code>, <code>pwsh</code>, or <code>cmd.exe</code>. Every surface exposes this as <strong>exactly one entry labelled &ldquo;Shell&rdquo;</strong>; there is no per-surface picker for the spawned binary. The daemon resolves it from a single Settings value, so the same shell launches from the GUI, TUI, and CLI.</p>
+
+      <h3>Launch a shell</h3>
+<pre><code><span class="cmt"># GUI — open New Session, pick the "Shell" row</span>
+<span class="kw">agenthub</span>
+
+<span class="cmt"># TUI — press n, cycle the agent picker to "Shell"</span>
+<span class="kw">agenthub tui</span>
+
+<span class="cmt"># CLI — optional positional working directory; omit to launch in $HOME</span>
+<span class="kw">agenthub new shell</span> [&lt;path&gt;]</code></pre>
+
+      <p>Extra tokens after <code>--</code> are not forwarded to shell sessions (a stderr warning is emitted if present, mirroring the GUI's no-args behaviour). The CLI has no <code>--shell</code> flag — selection happens once, in Settings.</p>
+
+      <h3>Choose the shell binary</h3>
+      <p>Open <strong>Settings → Paths → Shell binary path</strong> and pick the executable. The native folder browser is the same one used for CLI overrides. Leave it blank to fall back to <code>$SHELL</code> (or the platform default: <code>zsh</code> on macOS, <code>bash</code> on Linux, <code>powershell.exe</code> on Windows). Discovery surfaces canonical install locations on every platform — on Windows that includes <code>C:\Program Files\PowerShell\7</code> and <code>%LOCALAPPDATA%\Microsoft\WindowsApps</code> so PowerShell 7 is picked up wherever it landed.</p>
+
+      <div class="callout">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 7v6c0 5 4 9 9 10 5-1 9-5 9-10V7z"/><path d="M9 12l2 2 4-4"/></svg>
+        <div><strong>Web sharing a shell is opt-in, with a banner</strong>Shells expose your full command-line surface — far broader than the focused output of an AI CLI. Toggling web share on a shell session raises a <em>ShellWebShareBanner</em> that surfaces the risk and asks you to confirm. The acknowledgement persists per machine, so you only see the banner the first time per install.</div>
+      </div>
+
+      <p>Status heuristics specific to AI CLIs are bypassed for shells, so a shell tab simply stays <em>running</em> until you exit it. When the shell process exits cleanly (status code 0), the standard auto-close flow applies — 5-second countdown, <em>Keep Open</em> cancel — with PTY exit-code <code>-1</code> normalized to <code>0</code> so a tidy <code>exit</code> never falls through to the &ldquo;errored&rdquo; branch.</p>
+
       <h2 id="multi-client">Multi-client sessions</h2>
       <p>The relay hub fans one PTY's output to any number of connected clients over WebSocket. Every client gets its own scrollback position, font size, and identity.</p>
       <ul>
@@ -383,7 +409,7 @@ kbd {
         <tbody>
           <tr><td><strong>WebGL renderer</strong></td><td>GPU-accelerated terminal rendering</td><td>Auto-falls-back to DOM on context loss with an 8-second toast; proactive software-rasterizer detection (SwiftShader / llvmpipe / ANGLE-software / iPad Safari)</td></tr>
           <tr><td><strong>Search</strong></td><td>Scrollback search via a Cmd-F find bar</td><td>Desktop + web. Regex / case / whole-word toggles, persisted defaults, next/prev (Enter, Cmd-G), match count, 10K-line perf budget</td></tr>
-          <tr><td><strong>Web Links</strong></td><td>Clickable URLs in terminal output</td><td>Strict scheme allowlist (<code>https</code>, <code>http</code>, <code>mailto</code> — never <code>file://</code> or <code>javascript:</code>). Cmd/Ctrl-click only — single-click never activates. IDN/Punycode + 30-entry typosquat confirmation popover. Desktop opens via Wails <code>BrowserOpenURL</code>; web uses <code>_blank</code> + <code>noopener,noreferrer</code></td></tr>
+          <tr><td><strong>Web Links</strong></td><td>Clickable URLs in terminal output</td><td>Strict scheme allowlist (<code>https</code>, <code>http</code>, <code>mailto</code> — never <code>file://</code> or <code>javascript:</code>). v3.3 wires an explicit <code>urlRegex</code> so <code>mailto:</code> targets are first-class links, with IDN/Punycode + 30-entry typosquat confirmation extended to email addresses. Cmd/Ctrl-click only — single-click never activates. Desktop opens via Wails <code>BrowserOpenURL</code>; web uses <code>_blank</code> + <code>noopener,noreferrer</code></td></tr>
           <tr><td><strong>Inline images (sixel)</strong></td><td>Render sixel-encoded images directly in the terminal</td><td>Per-tab storage limit defaults to 16 MB (configurable). CSP carves out a minimal <code>'wasm-unsafe-eval'</code> for the audited sixel decoder. Multi-client byte-fidelity preserved</td></tr>
           <tr><td><strong>Unicode 11</strong></td><td>Correct wide-character and emoji width tables</td><td>Buffer-interpretation plugin — applies to new sessions only; web clients share the daemon-side setting so multi-client wrap stays identical</td></tr>
           <tr><td><strong>Save Terminal As…</strong></td><td>Save current scrollback to a <code>.txt</code> file</td><td>Right-click a tab → native Save dialog. Explicit gesture only — no auto-save / no on-disk capture</td></tr>
@@ -402,13 +428,13 @@ kbd {
 <span class="kw">agenthub daemon uninstall</span></code></pre>
 
       <h2 id="settings">Settings</h2>
-      <p>Settings live as a single scrollable page in the sidebar — no modals, no sub-tabs.</p>
+      <p>Settings live as a single scrollable page in the sidebar — no modals, no sub-tabs. A hyperlinked index sits at the top of the page so you can jump straight to any section.</p>
       <ul>
         <li><strong>Plugins</strong> (v3.2) — 8 toggles for the xterm.js addon suite, with inline disclosures for Search / Web Links / Inline Images sub-config; hot-swap for runtime plugins, "Applies to new sessions" inline for the rest</li>
         <li><strong>Appearance</strong> — 138 terminal themes, live preview</li>
         <li><strong>Web Server</strong> — start/stop, mode-aware status, URL actions (open / copy / inline QR), local-network password with click-to-copy</li>
         <li><strong>Security</strong> (v3.1) — Regenerate Signing Key panic button (invalidates every outstanding capability across all sessions), Tailscale 4-state status indicator with collapsible diagnostics, Certificate Transparency disclosure</li>
-        <li><strong>Paths</strong> — override auto-detected CLI binaries with a native folder picker</li>
+        <li><strong>Paths</strong> — override auto-detected CLI binaries with a native folder picker; v3.3 adds a <strong>Shell binary path</strong> row that drives shell sessions across GUI / TUI / CLI</li>
         <li><strong>Behavior</strong> — start minimized to the system tray</li>
         <li><strong>Session Behavior</strong> — auto-close tab on clean exit</li>
       </ul>
@@ -435,6 +461,7 @@ kbd {
         <li><a href="#gui">Desktop GUI</a></li>
         <li><a href="#cli">CLI reference</a></li>
         <li><a href="#tui">TUI mode</a></li>
+        <li><a href="#shell-sessions">Shell sessions (v3.3)</a></li>
         <li><a href="#multi-client">Multi-client</a></li>
         <li><a href="#remote">Remote &amp; Tailscale</a></li>
         <li><a href="#status">Status &amp; themes</a></li>
