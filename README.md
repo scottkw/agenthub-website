@@ -3,7 +3,7 @@
 Marketing site for [AgentHub](https://github.com/scottkw/agenthub) — a cross-platform desktop app, CLI, and TUI for running AI coding CLIs (Claude Code, Codex, Gemini CLI, OpenCode) and raw shell sessions (bash, zsh, fish, PowerShell) in persistent terminal sessions.
 
 **Live site:** [agenthub.app](https://agenthub.app) (or whichever domain the Worker is bound to)
-**Tracks AgentHub release:** v3.3.1 (May 19, 2026)
+**Tracks AgentHub release:** v3.3.2 (May 19, 2026)
 
 ## What's in here
 

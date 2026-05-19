@@ -182,7 +182,7 @@
 <section class="container-wide dl-hero">
   <div class="dl-version">
     <span class="dot"></span>
-    Latest: v3.3.1 · released May 19, 2026 · <a href="https://github.com/scottkw/agenthub/releases" target="_blank" rel="noopener">all releases</a>
+    Latest: v3.3.2 · released May 19, 2026 · <a href="https://github.com/scottkw/agenthub/releases" target="_blank" rel="noopener">all releases</a>
   </div>
   <h1>Download <span class="accent">AgentHub</span></h1>
   <p>Free, open-source, and every binary is signed. Pick your platform — each install ships with the GUI, CLI, and TUI in a single binary.</p>
@@ -225,7 +225,7 @@
         <div class="dl-opt primary">
           <div class="info">
             <div class="name">Direct download — .dmg</div>
-            <div class="meta">agenthub-v3.3.1-darwin-universal.dmg · 15 MB</div>
+            <div class="meta">agenthub-v3.3.2-darwin-universal.dmg · 15 MB</div>
           </div>
           <a href="https://github.com/scottkw/agenthub/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -259,7 +259,7 @@
         <div class="dl-opt primary">
           <div class="info">
             <div class="name">Debian / Ubuntu — .deb</div>
-            <div class="meta">agenthub-v3.3.1-linux-amd64.deb · 8 MB</div>
+            <div class="meta">agenthub-v3.3.2-linux-amd64.deb · 8 MB</div>
           </div>
           <a href="https://github.com/scottkw/agenthub/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -269,7 +269,7 @@
         <div class="dl-opt">
           <div class="info">
             <div class="name">Generic archive — .tar.gz</div>
-            <div class="meta">agenthub-v3.3.1-linux-amd64.tar.gz · 8 MB</div>
+            <div class="meta">agenthub-v3.3.2-linux-amd64.tar.gz · 8 MB</div>
           </div>
           <a href="https://github.com/scottkw/agenthub/releases/latest" target="_blank" rel="noopener" class="btn btn-ghost">Download .tar.gz</a>
         </div>
@@ -277,8 +277,8 @@
 
       <h4 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-faint); font-weight: 500; margin-bottom: 12px;">Install the .deb</h4>
       <div class="dl-cmd">
-        <code><span class="prompt">$</span>sudo dpkg -i agenthub-v3.3.1-linux-amd64.deb</code>
-        <button class="copy" data-copy="sudo dpkg -i agenthub-v3.3.1-linux-amd64.deb">Copy</button>
+        <code><span class="prompt">$</span>sudo dpkg -i agenthub-v3.3.2-linux-amd64.deb</code>
+        <button class="copy" data-copy="sudo dpkg -i agenthub-v3.3.2-linux-amd64.deb">Copy</button>
       </div>
 
       <div class="dl-prereq">
@@ -301,7 +301,7 @@
         <div class="dl-opt primary">
           <div class="info">
             <div class="name">NSIS installer — .exe</div>
-            <div class="meta">agenthub-v3.3.1-windows-amd64-installer.exe · 10 MB</div>
+            <div class="meta">agenthub-v3.3.2-windows-amd64-installer.exe · 10 MB</div>
           </div>
           <a href="https://github.com/scottkw/agenthub/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -311,7 +311,7 @@
         <div class="dl-opt">
           <div class="info">
             <div class="name">Standalone executable</div>
-            <div class="meta">agenthub-v3.3.1-windows-amd64.exe · 22 MB</div>
+            <div class="meta">agenthub-v3.3.2-windows-amd64.exe · 22 MB</div>
           </div>
           <a href="https://github.com/scottkw/agenthub/releases/latest" target="_blank" rel="noopener" class="btn btn-ghost">Download .exe</a>
         </div>
@@ -347,7 +347,12 @@
   <div class="releases">
     <h2 style="font-size: 22px; margin-bottom: 20px;">Recent releases</h2>
     <div class="release">
-      <div class="ver">v3.3.1 <span class="latest">Latest</span></div>
+      <div class="ver">v3.3.2 <span class="latest">Latest</span></div>
+      <div class="notes">Dependency maintenance — patch release rolling forward direct dependencies (<code>tailscale.com</code> 1.96.5, <code>nfpm/v2</code> 2.46.3, <code>golang.org/x/term</code> 0.42.0, <code>bubbletea/v2</code> 2.0.6, <code>godbus/v5</code> 5.2.2, plus <code>pnpm/action-setup</code> 6.0.8 in CI) and transitive security-relevant bumps (<code>x/crypto</code> 0.50.0, <code>x/net</code> 0.52.0, <code>go-git</code> 5.18.0, <code>ProtonMail/go-crypto</code> 1.4.1). No user-visible behavior changes from v3.3.1.</div>
+      <div class="date">May 19, 2026</div>
+    </div>
+    <div class="release">
+      <div class="ver">v3.3.1</div>
       <div class="notes">Bug sweep closing all known issues in v3.3. <strong>Windows daemon named-pipe IPC</strong> — daemon now listens on <code>\\.\pipe\agenthub-daemon</code>; GUI / CLI / TUI all work on a fresh Windows install (credit: <a href="https://github.com/im-alexandre" target="_blank" rel="noopener">@im-alexandre</a>, PR #53). <strong>OSC color-query + DA1 leak</strong> filtered on both web-share and daemon-direct relays via a streaming <code>InputAbsorber</code> — <code>chafa --format=sixel</code>, <code>vim</code>, <code>neovim</code> truecolor probes, and <code>mc</code> no longer leave junk on the prompt. <strong>WebGL recovery banner</strong> renders with 8s auto-dismiss on context loss; DOM fallback continues working. <strong>iPad touch-scroll</strong> for terminal scrollback (single-finger drag) on iPad Safari + Chrome; multi-touch pinch-zoom and OSC 8 tap-on-link preserved. <strong>Linux shell auto-close</strong> — SHELL-12 5s countdown now matches macOS via a platform-specific PTY exit detector. <strong>CI test stability</strong> — flaky plugin-config capability test deflaked and three pre-existing default-value tests repaired. Plus a TUI zero-dimension guard, <code>agenthub attach</code> clears the local terminal on entry, and a bounded-lifetime contract on the <code>killSession</code> Wait goroutine.</div>
       <div class="date">May 19, 2026</div>
     </div>
